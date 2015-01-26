@@ -1,4 +1,4 @@
-# senior-design
+# UAV Delivery System
 
 This is a senior design project by four 
 Mississippi State University Electrical and Computer Engineering Seniors
