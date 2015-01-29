@@ -130,7 +130,7 @@ body{
 #deliverables li{
 	list-style-type: none;
 	text-indent: 25px;
-	padding: 15px 0px 15px 0px; /* top right bottom left */
+	padding: 15px 0px 5px 0px; /* top right bottom left */
 	font-size: 18px;
 }
 #deliverables ul{
@@ -140,8 +140,10 @@ body{
 	width: 290px;
 	padding: 0px 50px 0px 0px; /* top right bottom left */
 }
+#left li{
+	padding-bottom: 13px;
+}
 #center{
-	
 	width: 50px;
 	padding: 0px 50px 0px 0px; /* top right bottom left */
 }
