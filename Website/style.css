@@ -9,7 +9,16 @@ Author: James Tate 2013
 	margin: 0px;
 	padding: 0px;
 }
+a{
+	text-decoration: none;
+}
 h1{
+	padding: 2px;
+	font: 40px Tahoma, Geneva, sans-serif;
+	color: #141414;
+	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+h1 a{
 	padding: 2px;
 	font: 40px Tahoma, Geneva, sans-serif;
 	color: #141414;
@@ -24,14 +33,15 @@ h2 a:hover{
 	color: blue;
 }
 h3{
-	font: 20px bold Palatino Linotype;
+	font: 24px bold Palatino Linotype;
 }
 h3 a:hover{
 	
 }
 h4{
-	font: 17px Palatino Linotype;
+	font: 23px Palatino Linotype;
 	color: #870505;
+	text-indent: 10px;
 }
 p{
 	margin-top: 10px;
@@ -110,4 +120,32 @@ body{
 }
 #main{
 	padding: 5px 50px 50px 50px; /* top right bottom left */
+}
+#deliverables{
+	padding: 25px 50px 50px 50px; /* top right bottom left */
+	height: 550px;
+	text-align: left;
+	display: block;
+}
+#deliverables li{
+	list-style-type: none;
+	text-indent: 25px;
+	padding: 15px 0px 15px 0px; /* top right bottom left */
+	font-size: 18px;
+}
+#deliverables ul{
+	float:left;
+}
+#left{
+	width: 290px;
+	padding: 0px 50px 0px 0px; /* top right bottom left */
+}
+#center{
+	
+	width: 50px;
+	padding: 0px 50px 0px 0px; /* top right bottom left */
+}
+#right{
+	width:50px;
+	padding: 0px 50px 0px 0px; /* top right bottom left */
 }
