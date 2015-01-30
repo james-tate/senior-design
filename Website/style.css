@@ -43,6 +43,10 @@ h4{
 	color: #870505;
 	text-indent: 10px;
 }
+h5{
+	font: 19px Palatino Linotype;
+	color: #870505;
+}
 p{
 	margin-top: 10px;
 	text-indent: 25px;
@@ -148,6 +152,39 @@ body{
 	padding: 0px 50px 0px 0px; /* top right bottom left */
 }
 #right{
-	width:50px;
+	width: 50px;
 	padding: 0px 50px 0px 0px; /* top right bottom left */
+}
+#team li{
+	display: inline-block;
+	margin-left:auto;
+	margin-right:auto;
+	padding: 10px 10px 10px 10px; /* top right bottom left */
+	background: #F3F1F2;
+	list-style: none;
+}
+#teaminfo{
+	height: 100px;
+	text-indent: 0px;
+	padding: 25px 25px 25px 25px;
+	margin-bottom: 15px;
+	text-align: left;
+}
+#drjones{
+	float: left; 
+	width: 220px; 
+	margin-right: 50px;
+}
+#drjonespic{
+	width: 200px;
+	height: 305px;
+	margin-top: 15px;
+	padding: 10px 10px 10px 10px; /* top right bottom left */
+	background: #F3F1F2;
+	margin-right: 50px;
+}
+#drjonesinfo{
+	text-indent: 0px;
+	margin: 75px 10px 20px 10px; /* top right bottom left */
+	padding: 10px 10px 10px 10px; /* top right bottom left */
 }
