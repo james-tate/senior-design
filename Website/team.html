@@ -29,10 +29,10 @@
 				<h2>Meet team Air Mail!</h2>
 				
 				<ul id="team">
-					<li id="james" onmouseover="james()"><img src="pics/placehold.png"/></br><h5>James Tate</h5></br>Computer Engineer</br>jct322@msstate.edu</br><a href="">Resume</a></li>
-					<li id="tyler" onmouseover="tyler()"><img src="pics/placehold.png"/></br><h5>Tyler Hannis</h5></br>Electrical Engineer</br>tjh153@msstate.edu</br><a href="">Resume</a></li>
-					<li id="boddrick" onmouseover="boddrick()"><img src="pics/placehold.png"/></br><h5>Boddrick Hudson</h5></br>Computer Engineer</br>­ bh392@msstate.edu</br><a href="">Resume</a></li>
-					<li id="josh" onmouseover="josh()"><img src="pics/placehold.png"/></br><h5>Josh Dowdy</h5></br>Computer Engineer</br>jld563@msstate.edu</br><a href="">Resume</a></li>
+					<li id="james" onmouseover="james()" onmouseleave="team()"><img src="pics/placehold.png"/></br><h5>James Tate</h5></br><span style="font-weight:bold">Computer Enginer</span></br>jct322@msstate.edu</br><a href="">Resume</a></li>
+					<li id="tyler" onmouseover="tyler()" onmouseleave="team()"><img src="pics/placehold.png"/></br><h5>Tyler Hannis</h5></br><span style="font-weight:bold">Electrical Engineer</span></br>tjh153@msstate.edu</br><a href="">Resume</a></li>
+					<li id="boddrick" onmouseover="boddrick()" onmouseleave="team()"><img src="pics/placehold.png"/></br><h5>Boddrick Hudson</h5></br><span style="font-weight:bold">Computer Engineer</span></br>­ bh392@msstate.edu</br><a href="">Resume</a></li>
+					<li id="josh" onmouseover="josh()" onmouseleave="team()"><img src="pics/placehold.png"/></br><h5>Josh Dowdy</h5></br><span style="font-weight:bold">Computer Engineer</span></br>jld563@msstate.edu</br><a href="">Resume</a></li>
 				</ul>
 				
 				<script>
@@ -48,11 +48,14 @@
 					function josh() {
 						document.getElementById("teaminfo").innerHTML = "Josh info";   
 					}
+					function team() {
+						document.getElementById("teaminfo").innerHTML = "The Air Mail Team is made up of four members (three Computer Engineering Majors, one Electrical Engineering Major).</br></br><span style=\"font-weight:bold\">Feel Free to scroll over our photo's to learn more about us.</span>";  
+					}
 				</script>
 				
-				<p id="teaminfo">The Air Mail Team is made up of four members (three Computer Engineering Majors, one Electrical Engineering Major). Our faculty advisor is Dr. Bryan Jones.</br></br>
-				<span style="font-weight:bold">Feel Free to scroll over our photoes to learn more about us.</span>
-				
+				<p id="teaminfo">
+					The Air Mail Team is made up of four members (three Computer Engineering Majors, one Electrical Engineering Major).</br></br>
+					<span style="font-weight:bold">Feel Free to scroll over our photo's to learn more about us.</span> 
 				<p>
 				
 				
