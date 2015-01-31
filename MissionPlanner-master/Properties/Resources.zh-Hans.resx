@@ -128,7 +128,7 @@
 {\sp{\sn fillBlip}{\sv {\pict\wmetafile0\picscalex1\picscaley1 
 }}}}}}
 \pard\nowidctlpar\sa200\sl276\slmult1\cf1\f0\fs22\par
-\tab 欢迎使用\b Mission Planner\b0 ，本软件可以为无人机(\b UAV\b0 )规划任务。\par
+\tab 欢迎使用\b Mission Planner 1\b0 ，本软件可以为无人机(\b UAV\b0 )规划任务。\par
 \tab 快速入门：\par
 \tab\tab\tab\b 飞行数据 \endash  \b0 带有位置和姿态的简单飞行屏幕。\par
 \b\tab\tab\tab 飞行计划 \endash  \b0 计划你的飞行和其它脚本任务。\par
@@ -147,7 +147,7 @@ Arduplane: http://plane.ardupilot.cn\par
 ArduCopter: http://copter.ardupilot.cn\par
 ArduRover: http://rover.ardupilot.cn\par
 \par
-请访问{\field{\*\fldinst{HYPERLINK "www.diydrones.com"}}{\fldrslt{\ul\cf2 www.diydrones.com}}}\f0\fs22 获得更多信息。\par
+请访问{\field{\*\fldinst{HYPERLINK {\fldrslt{\ul\cf2 www.diydrones.com}}}\f0\fs22 获得更多信息。\par
 \par
 \b本简体中文翻译由APM中文网(http://ardupilot.cn/)MP翻译组提供，并正在不断完善中。\b0\par
 组长：四季天书\par

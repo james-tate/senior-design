@@ -871,48 +871,12 @@ namespace MissionPlanner {
         }
         
         /// <summary>
-        ///   查找类似 Warning 的本地化字符串。
-        /// </summary>
-        public static string Warning {
-            get {
-                return ResourceManager.GetString("Warning", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Warning, as of AC 3.1 motors will spin when armed, configurable through the MOT_SPIN_ARMED parameter 的本地化字符串。
-        /// </summary>
-        public static string WarningAC31 {
-            get {
-                return ResourceManager.GetString("WarningAC31", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Warning, if you are installing AC 3.2 for the first time you MUST redo a Compass calibration. 的本地化字符串。
-        /// </summary>
-        public static string WarningAC32 {
-            get {
-                return ResourceManager.GetString("WarningAC32", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Log Browse will not function correctly without FMT messages in your log.
         ///These appear to be missing from your log. 的本地化字符串。
         /// </summary>
         public static string WarningLogBrowseFMTMissing {
             get {
                 return ResourceManager.GetString("WarningLogBrowseFMTMissing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Warning rally points are located greater than RALLY_LIMIT_KM 的本地化字符串。
-        /// </summary>
-        public static string Warningrallypointdistance {
-            get {
-                return ResourceManager.GetString("Warningrallypointdistance", resourceCulture);
             }
         }
         

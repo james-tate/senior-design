@@ -249,11 +249,7 @@ namespace MissionPlanner.Log
 
                     if (chk_droneshare.Checked)
                     {
-                        try
-                        {
-                            Utilities.DroneApi.droneshare.doUpload(logname);
-                        }
-                        catch (Exception ex) { CustomMessageBox.Show("Droneshare upload failed " + ex.ToString()); }
+                        Utilities.DroneApi.droneshare.doUpload(logname);
                     }
                 }
 
@@ -281,11 +277,7 @@ namespace MissionPlanner.Log
 
                     if (chk_droneshare.Checked)
                     {
-                        try
-                        {
-                            Utilities.DroneApi.droneshare.doUpload(logname);
-                        }
-                        catch (Exception ex) { CustomMessageBox.Show("Droneshare upload failed " + ex.ToString()); }
+                        Utilities.DroneApi.droneshare.doUpload(logname);
                     }
                 }
 

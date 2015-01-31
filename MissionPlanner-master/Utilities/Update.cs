@@ -24,64 +24,64 @@ namespace MissionPlanner.Utilities
        static bool MONO = false;
        public static bool dobeta = false;
 
-        public static void updateCheckMain(ProgressReporterDialogue frmProgressReporter)
-        {
+        //public static void updateCheckMain(ProgressReporterDialogue frmProgressReporter)
+        //{
 
-            var t = Type.GetType("Mono.Runtime");
-            MONO = (t != null);
+        //    var t = Type.GetType("Mono.Runtime");
+        //    MONO = (t != null);
 
-            try
-            {
-                if (dobeta)
-                {
-                    CheckMD5(frmProgressReporter, ConfigurationManager.AppSettings["BetaUpdateLocationMD5"].ToString());
-                }
-                else
-                {
-                    CheckMD5(frmProgressReporter, ConfigurationManager.AppSettings["UpdateLocationMD5"].ToString());
-                }
+        //    try
+        //    {
+        //        if (dobeta)
+        //        {
+        //            CheckMD5(frmProgressReporter, ConfigurationManager.AppSettings["BetaUpdateLocationMD5"].ToString());
+        //        }
+        //        else
+        //        {
+        //            CheckMD5(frmProgressReporter, ConfigurationManager.AppSettings["UpdateLocationMD5"].ToString());
+        //        }
 
-                var process = new Process();
-                string exePath = Path.GetDirectoryName(Application.ExecutablePath);
-                if (MONO)
-                {
-                    process.StartInfo.FileName = "mono";
-                    process.StartInfo.Arguments = " \"" + exePath + Path.DirectorySeparatorChar + "Updater.exe\"" + "  \"" + Application.ExecutablePath + "\"";
-                }
-                else
-                {
-                    process.StartInfo.FileName = exePath + Path.DirectorySeparatorChar + "Updater.exe";
-                    process.StartInfo.Arguments = Application.ExecutablePath;
-                }
+        //        var process = new Process();
+        //        string exePath = Path.GetDirectoryName(Application.ExecutablePath);
+        //        if (MONO)
+        //        {
+        //            process.StartInfo.FileName = "mono";
+        //            process.StartInfo.Arguments = " \"" + exePath + Path.DirectorySeparatorChar + "Updater.exe\"" + "  \"" + Application.ExecutablePath + "\"";
+        //        }
+        //        else
+        //        {
+        //            process.StartInfo.FileName = exePath + Path.DirectorySeparatorChar + "Updater.exe";
+        //            process.StartInfo.Arguments = Application.ExecutablePath;
+        //        }
 
-                try
-                {
-                    foreach (string newupdater in Directory.GetFiles(exePath, "Updater.exe*.new"))
-                    {
-                        File.Copy(newupdater, newupdater.Remove(newupdater.Length - 4), true);
-                        File.Delete(newupdater);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log.Error("Exception during update", ex);
-                }
-                if (frmProgressReporter != null)
-                    frmProgressReporter.UpdateProgressAndStatus(-1, "Starting Updater");
-                log.Info("Starting new process: " + process.StartInfo.FileName + " with " + process.StartInfo.Arguments);
-                process.Start();
-                log.Info("Quitting existing process");
+        //        try
+        //        {
+        //            foreach (string newupdater in Directory.GetFiles(exePath, "Updater.exe*.new"))
+        //            {
+        //                File.Copy(newupdater, newupdater.Remove(newupdater.Length - 4), true);
+        //                File.Delete(newupdater);
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            log.Error("Exception during update", ex);
+        //        }
+        //        if (frmProgressReporter != null)
+        //            frmProgressReporter.UpdateProgressAndStatus(-1, "Starting Updater");
+        //        log.Info("Starting new process: " + process.StartInfo.FileName + " with " + process.StartInfo.Arguments);
+        //        process.Start();
+        //        log.Info("Quitting existing process");
 
-                frmProgressReporter.BeginInvoke((Action) delegate {
-                Application.Exit();
-                });
-            }
-            catch (Exception ex)
-            {
-                log.Error("Update Failed", ex);
-                CustomMessageBox.Show("Update Failed " + ex.Message);
-            }
-        }
+        //        frmProgressReporter.BeginInvoke((Action) delegate {
+        //        Application.Exit();
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error("Update Failed", ex);
+        //        CustomMessageBox.Show("Update Failed " + ex.Message);
+        //    }
+        //}
 
         public static void CheckForUpdate()
         {
@@ -210,7 +210,6 @@ new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate
                 baseurl = ConfigurationManager.AppSettings["BetaUpdateLocation"];
             }
 
-            ReplaceMirrorUrl(ref baseurl);
 
             WebRequest request = WebRequest.Create(url);
             request.Timeout = 10000;
@@ -259,7 +258,7 @@ new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate
                         if (!MD5File(file + ".new", hash))
                         {
                             if (frmProgressReporter != null)
-                                frmProgressReporter.UpdateProgressAndStatus(-1, Strings.Getting + file);
+                                frmProgressReporter.UpdateProgressAndStatus(-1, "Getting " + file);
 
                             string subdir = Path.GetDirectoryName(file) + Path.DirectorySeparatorChar;
 
@@ -279,7 +278,7 @@ new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate
                         log.Info("Same File " + file);
 
                         if (frmProgressReporter != null)
-                            frmProgressReporter.UpdateProgressAndStatus(-1, Strings.Checking + file);
+                            frmProgressReporter.UpdateProgressAndStatus(-1, "Checking " + file);
                     }
                 }
             }
@@ -351,7 +350,7 @@ new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate
 
                         // update status
                         if (frmProgressReporter != null)
-                            frmProgressReporter.UpdateProgressAndStatus(-1, Strings.Getting + file);
+                            frmProgressReporter.UpdateProgressAndStatus(-1, "Getting " + file);
 
                         // from head
                         long bytes = response.ContentLength;
@@ -375,7 +374,7 @@ new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate
                                     if (dt.Second != DateTime.Now.Second)
                                     {
                                         if (frmProgressReporter != null)
-                                            frmProgressReporter.UpdateProgressAndStatus((int)(((double)(contlen - bytes) / (double)contlen) * 100), Strings.Getting + file + ": " + (((double)(contlen - bytes) / (double)contlen) * 100).ToString("0.0") + "%"); //+ Math.Abs(bytes) + " bytes");
+                                            frmProgressReporter.UpdateProgressAndStatus((int)(((double)(contlen - bytes) / (double)contlen) * 100), "Getting " + file + ": " + (((double)(contlen - bytes) / (double)contlen) * 100).ToString("0.0") + "%"); //+ Math.Abs(bytes) + " bytes");
                                         dt = DateTime.Now;
                                     }
                                 }
@@ -427,7 +426,7 @@ new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate
             }
             //  else
             {
-                updateCheckMain(progressReporterDialogue);
+               // updateCheckMain(progressReporterDialogue);
             }
         }
 
@@ -682,32 +681,6 @@ new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate
             return update;
 
 
-        }
-
-        static string ReplaceMirrorUrl(ref string url)
-        {
-            switch (System.Globalization.CultureInfo.CurrentUICulture.Name)
-            {
-                case "zh-CN":
-                case "zh-Hans":
-                    if (url.Contains("raw.github.com"))
-                    {
-                        url = url.Replace("raw.github.com", "githubraw.diywrj.com");
-                    }
-                    else if (url.Contains("firmware.diydrones.com"))
-                    {
-                        url = url.Replace("firmware.diydrones.com", "firmware.diywrj.com");
-                    }
-                    else if (url.Contains("github.com"))
-                    {
-                        url = url.Replace("github.com", "github.diywrj.com");
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            return url;
         }
     }
 }

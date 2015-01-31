@@ -81,8 +81,6 @@ namespace MissionPlanner
             public string startfrom;
             public bool autotakeoff;
             public bool autotakeoff_RTL;
-            public bool alternateLanes;
-            public decimal minlaneseparation;
 
             public bool internals;
             public bool footprints;
@@ -228,9 +226,6 @@ namespace MissionPlanner
             // Copter Settings
             NUM_copter_delay.Value = griddata.copter_delay;
             //CHK_copter_headinghold.Checked = griddata.copter_headinghold_chk; //UNcomment after adding headinghold offset function
-
-            // Plane Settings
-            NUM_Lane_Dist.Value = griddata.minlaneseparation;
         }
 
         GridData savegriddata()
@@ -245,7 +240,6 @@ namespace MissionPlanner
             griddata.camdir = CHK_camdirection.Checked;
 
             griddata.usespeed = CHK_usespeed.Checked;
-
 
             griddata.dist = NUM_Distance.Value;
             griddata.overshoot1 = NUM_overshoot.Value;
@@ -271,9 +265,6 @@ namespace MissionPlanner
             griddata.copter_delay = NUM_copter_delay.Value;
             griddata.copter_headinghold_chk = CHK_copter_headinghold.Checked;
             griddata.copter_headinghold = NUM_spacing.Value;
-
-            // Plane Settings
-            griddata.minlaneseparation = NUM_Lane_Dist.Value;
 
             return griddata;
         }
@@ -316,9 +307,6 @@ namespace MissionPlanner
                 // Copter Settings
                 loadsetting("grid_copter_delay", NUM_copter_delay);
                 //loadsetting("grid_copter_headinghold_chk", CHK_copter_headinghold);
-
-                // Plane Settings
-                loadsetting("grid_min_lane_separation", NUM_Lane_Dist);
             }
         }
 
@@ -382,9 +370,6 @@ namespace MissionPlanner
             // Copter Settings
             plugin.Host.config["grid_copter_delay"] = NUM_copter_delay.Value.ToString();
             plugin.Host.config["grid_copter_headinghold_chk"] = CHK_copter_headinghold.Checked.ToString();
-
-            // Plane Settings
-            plugin.Host.config["grid_min_lane_separation"] = NUM_Lane_Dist.Value.ToString();
         }
 
         private void xmlcamera(bool write, string filename = "cameras.xml")
@@ -514,7 +499,7 @@ namespace MissionPlanner
 
             // new grid system test
 
-            grid = Grid.CreateGrid(list, CurrentState.fromDistDisplayUnit((double)NUM_altitude.Value), (double)NUM_Distance.Value, (double)NUM_spacing.Value, (double)NUM_angle.Value, (double)NUM_overshoot.Value, (double)NUM_overshoot2.Value, (Grid.StartPosition)Enum.Parse(typeof(Grid.StartPosition), CMB_startfrom.Text), false, (float)NUM_Lane_Dist.Value);
+            grid = Grid.CreateGrid(list, CurrentState.fromDistDisplayUnit((double)NUM_altitude.Value), (double)NUM_Distance.Value, (double)NUM_spacing.Value, (double)NUM_angle.Value, (double)NUM_overshoot.Value, (double)NUM_overshoot2.Value, (Grid.StartPosition)Enum.Parse(typeof(Grid.StartPosition), CMB_startfrom.Text), false);
 
             List<PointLatLng> list2 = new List<PointLatLng>();
 
@@ -672,7 +657,7 @@ namespace MissionPlanner
 
             lbl_pictures.Text = images.ToString();
             lbl_strips.Text = ((int)(strips / 2)).ToString();
-            double seconds = ((routetotal * 1000.0) / ((flyspeedms) * 0.8));
+            double seconds = ((routetotal * 1000.0) / ((flyspeedms) * 0.8)) + (float)NUM_copter_delay.Value * strips;
             // reduce flying speed by 20 %
             lbl_flighttime.Text = secondsToNice(seconds);
             seconds = ((routetotal * 1000.0) / (flyspeedms));
@@ -1448,12 +1433,6 @@ namespace MissionPlanner
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
-        }
-
-        private void NUM_Lane_Dist_ValueChanged(object sender, EventArgs e)
-        {
-            // doCalc
-            domainUpDown1_ValueChanged(sender, e);
         }
     }
 }

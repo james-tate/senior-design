@@ -32,8 +32,6 @@ namespace MissionPlanner
 
         public event EventHandler MavChanged;
 
-        public event EventHandler CommsClose;
-
         const int gcssysid = 255;
 
         /// <summary>
@@ -186,12 +184,6 @@ namespace MissionPlanner
                 MAVlist[a] = new MAVState();
         }
 
-        public MAVLinkInterface(Stream st): this()
-        {
-            logplaybackfile = new BinaryReader(st);
-            logreadmode = true;
-        }
-
         public void Close()
         {
             try
@@ -217,13 +209,6 @@ namespace MissionPlanner
             {
                 if (BaseStream.IsOpen)
                     BaseStream.Close();
-            }
-            catch { }
-
-            try
-            {
-                if (CommsClose != null)
-                    CommsClose(this, null);
             }
             catch { }
         }

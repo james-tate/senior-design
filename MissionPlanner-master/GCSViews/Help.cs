@@ -16,8 +16,6 @@ namespace MissionPlanner.GCSViews
         public Help()
         {
             InitializeComponent();
-
-
         }
 
         public void Activate()
@@ -44,10 +42,10 @@ namespace MissionPlanner.GCSViews
             richTextBox1.Rtf = MissionPlanner.Properties.Resources.help_text;
         }
 
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        /*private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             System.Diagnostics.Process.Start("http://firmware.diydrones.com/Tools/MissionPlanner/upgrade/ChangeLog.txt");
-        }
+        }*/
 
         private void PIC_wizard_Click(object sender, EventArgs e)
         {
@@ -60,6 +58,11 @@ namespace MissionPlanner.GCSViews
         {
             MissionPlanner.Utilities.Update.dobeta = true;
             MissionPlanner.Utilities.Update.DoUpdate();
+        }
+
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+            
         }
     }
 }

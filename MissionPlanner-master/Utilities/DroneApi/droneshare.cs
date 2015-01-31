@@ -126,9 +126,9 @@ namespace MissionPlanner.Utilities.DroneApi
             {
                 var answer = ex.Response as HttpWebResponse;
                 if (answer != null)
-                    CustomMessageBox.Show(answer.StatusDescription);
+                    MessageBox.Show(answer.StatusDescription);
                 else
-                    CustomMessageBox.Show("Failed to upload\n" + ex.ToString());
+                    MessageBox.Show("Failed to upload\n" + ex.ToString());
             }
             catch (Exception ex)
             {

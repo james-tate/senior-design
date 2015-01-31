@@ -112,40 +112,37 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="richTextBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="richTextBox1.Location" type="System.Drawing.Point, System.Drawing">
     <value>106, 80</value>
   </data>
   <data name="richTextBox1.Size" type="System.Drawing.Size, System.Drawing">
     <value>778, 283</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="richTextBox1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
-  </data>
-  <data name="richTextBox1.Text" xml:space="preserve">
-    <value />
   </data>
   <data name="&gt;&gt;richTextBox1.Name" xml:space="preserve">
     <value>richTextBox1</value>
   </data>
   <data name="&gt;&gt;richTextBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;richTextBox1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;richTextBox1.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="CHK_showconsole.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom</value>
@@ -169,70 +166,13 @@
     <value>CHK_showconsole</value>
   </data>
   <data name="&gt;&gt;CHK_showconsole.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;CHK_showconsole.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;CHK_showconsole.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="BUT_updatecheck.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom</value>
-  </data>
-  <data name="BUT_updatecheck.Location" type="System.Drawing.Point, System.Drawing">
-    <value>361, 390</value>
-  </data>
-  <data name="BUT_updatecheck.Size" type="System.Drawing.Size, System.Drawing">
-    <value>123, 29</value>
-  </data>
-  <data name="BUT_updatecheck.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="BUT_updatecheck.Text" xml:space="preserve">
-    <value>Check for Updates</value>
-  </data>
-  <data name="&gt;&gt;BUT_updatecheck.Name" xml:space="preserve">
-    <value>BUT_updatecheck</value>
-  </data>
-  <data name="&gt;&gt;BUT_updatecheck.Type" xml:space="preserve">
-    <value>Controls.MyButton, MissionPlanner.Controls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;BUT_updatecheck.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;BUT_updatecheck.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="linkLabel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom</value>
-  </data>
-  <data name="linkLabel1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="linkLabel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>459, 445</value>
-  </data>
-  <data name="linkLabel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>65, 13</value>
-  </data>
-  <data name="linkLabel1.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Change Log</value>
-  </data>
-  <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
-    <value>linkLabel1</value>
-  </data>
-  <data name="&gt;&gt;linkLabel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;linkLabel1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;linkLabel1.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="PIC_wizard.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -253,47 +193,17 @@
     <value>PIC_wizard</value>
   </data>
   <data name="&gt;&gt;PIC_wizard.Type" xml:space="preserve">
-    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;PIC_wizard.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;PIC_wizard.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="BUT_betaupdate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom</value>
-  </data>
-  <data name="BUT_betaupdate.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="BUT_betaupdate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>490, 390</value>
-  </data>
-  <data name="BUT_betaupdate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>123, 29</value>
-  </data>
-  <data name="BUT_betaupdate.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="BUT_betaupdate.Text" xml:space="preserve">
-    <value>Check for BETA Updates</value>
-  </data>
-  <data name="&gt;&gt;BUT_betaupdate.Name" xml:space="preserve">
-    <value>BUT_betaupdate</value>
-  </data>
-  <data name="&gt;&gt;BUT_betaupdate.Type" xml:space="preserve">
-    <value>Controls.MyButton, MissionPlanner.Controls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;BUT_betaupdate.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;BUT_betaupdate.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <data name="$this.Localizable" type="System.Boolean, mscorlib">
     <value>True</value>
-  </metadata>
+  </data>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -308,5 +218,39 @@
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.MyUserControl, MissionPlanner.Controls, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="richTextBox1.Text" xml:space="preserve">
+    <value>{\rtf1\ansi\ansicpg1252\deff0\deflang3081\deflangfe3081{\fonttbl{\f0\fswiss\fprq2\fcharset0 Calibri;}}
+{\colortbl ;\red255\green255\blue255;\red0\green0\blue255;}
+{\*\generator Msftedit 5.41.21.2510;}\viewkind5\uc1{\*\background{\shp{\*\shpinst
+{\sp{\sn fillType}{\sv 0}}
+{\sp{\sn fillColor}{\sv 2565927}}
+{\sp{\sn fillBackColor}{\sv 0}}
+{\sp{\sn fillFocus}{\sv 0}}
+{\sp{\sn fillBlip}{\sv {\pict\wmetafile0\picscalex1\picscaley1 
+}}}}}}
+\pard\nowidctlpar\sa200\sl276\slmult1\cf1\f0\fs22\par
+\tab Welcome to the \b Mission Planner\b0 , mission planning for Unmanned Aerial Vehicles (\b UAV\b0 ).\par
+\tab Getting started:\par
+\tab\tab\tab\b Flight Data \endash  \b0 Primary flying screen with location and attitude.\par
+\b\tab\tab\tab Flight Planner \endash  \b0 Plans your flight and other scripted actions.\par
+\b\tab\tab\tab Configuration \endash  \b0 Customises the PIDS and other critical settings including enabling and disabling hardware.\par
+\b\tab\tab\tab Simulation \endash  \b0 Used with Xplanes and Flightgear for HIL simulation when used with your board.\par
+\b\tab\tab\tab Firmware \endash  \b0 Updates your APM Firmware with the latest stable build, sets up your new ArduPlane/ArduCopter/ArduRover.\par
+\b\tab\tab\tab Terminal \endash  \b0 Manual set up of your APM and run tests on sensors, log reading and other functions.\par
+\pard\nowidctlpar\b\tab Main Developer:\b0  Michael Oborne\par
+\tab\b Design:\b0  Samantha Nelson\par
+\tab\b Contributions from:\b0  Andrew Radford,  Marooned\par
+\pard\nowidctlpar\fi720\b ArduCopter Illustrations:\b0  Max Levine\par
+\b Librarys:\b0  Gmap.net, Sharpkml, SharpZipLib, IronPython, KMLib, OpenTK, ZedGraph\par
+\par
+\b Help:\par
+Arduplane: code.google.com/p/ardupilot-mega/wiki/home?tm=6\par
+ArduCopter: code.google.com/p/arducopter/wiki/ArduCopter?tm=6\par
+ArduRover: code.google.com/p/ardurover/wiki/Overview?tm=6\par
+\par
+Please visit {\field{\*\fldinst{HYPERLINK "www.diydrones.com"}}{\fldrslt{\ul\cf2 www.diydrones.com}}}\f0\fs22  for further information.\par
+\par
+}</value>
   </data>
 </root>

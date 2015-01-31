@@ -248,10 +248,10 @@ namespace MissionPlanner.GCSViews.ConfigurationView
                 {
 
                     if (fwtoupload.url2560_2 != null && fwtoupload.url2560_2.ToLower().Contains("copter") && fwtoupload.name.ToLower().Contains("3.1"))
-                        CustomMessageBox.Show(Strings.WarningAC31, Strings.Warning);
+                        CustomMessageBox.Show("Warning, as of AC 3.1 motors will spin when armed, configurable through the MOT_SPIN_ARMED parameter", "Warning");
 
                     if (fwtoupload.url2560_2 != null && fwtoupload.url2560_2.ToLower().Contains("copter") && fwtoupload.name.ToLower().Contains("3.2"))
-                        CustomMessageBox.Show(Strings.WarningAC32, Strings.Warning);
+                        CustomMessageBox.Show("Warning, if you are installing AC 3.2 for the first time you MUST redo a Compass calibration.", "Warning");
                 }
                 else
                 {

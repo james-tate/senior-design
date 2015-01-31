@@ -170,15 +170,6 @@ namespace MissionPlanner.Log
             mapoverlay.Clear();
             markeroverlay.Clear();
 
-            logdatafilter.Clear();
-
-            ErrorCache = new List<TextObj>();
-            ModeCache = new List<TextObj>();
-            TimeCache = new List<TextObj>();
-
-            seenmessagetypes = new Hashtable();
-            m_timeTable = new Dictionary<int, int>();
-
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             openFileDialog1.Filter = "Log Files|*.log;*.bin";
             openFileDialog1.FilterIndex = 2;
