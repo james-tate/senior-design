@@ -34,6 +34,9 @@ h2 a:hover{
 }
 h3{
 	font: 24px bold Palatino Linotype;
+	color: #870505;
+	text-indent: 10px;
+	text-align: left;
 }
 h3 a:hover{
 	
@@ -188,4 +191,7 @@ body{
 	text-indent: 0px;
 	margin: 75px 10px 20px 10px; /* top right bottom left */
 	padding: 10px 10px 10px 10px; /* top right bottom left */
+}
+.current{
+	padding: 5px 50px 50px 50px;
 }
