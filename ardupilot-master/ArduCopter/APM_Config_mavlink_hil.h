@@ -26,7 +26,7 @@
 //
 // The buad rate is controlled by SERIAL1_BAUD in this mode.
 
-#define HIL_PORT            3
+#define HIL_PORT            1
 
 // Sensors
 // All sensors are supported in all modes.
