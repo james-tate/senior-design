@@ -195,3 +195,74 @@ body{
 .current{
 	padding: 5px 50px 50px 50px;
 }
+
+#leftdata{
+	width: 290px;
+	text-align: center;
+	padding: 0px 0px 0px 0px; /* top right bottom left */
+}
+#leftdata li{
+	border: 1px solid black;
+	height: 200px;
+}
+#centerdata{
+	width: 275px;
+	text-align: center;
+	padding: 0px 0px 0px 0px; /* top right bottom left */
+}
+#centerdata li{
+	border: 1px solid black;
+	height: 200px;
+}
+#rightdata{
+	width: 300px;
+	text-align: center;
+	padding: 0px 0px 0px 0px; /* top right bottom left */
+}
+#rightdata li{
+	border: 1px solid black;
+	height: 200px;
+	vertical-align: middle;
+}
+#data{
+	padding: 25px 50px 50px 50px; /* top right bottom left */
+	/*move this as page gets larger*/
+	height: 750px;
+	text-align: left;
+	display: block;
+}
+#data li{
+	list-style-type: none;
+	text-indent: 25px;
+	padding: 15px 0px 5px 0px; /* top right bottom left */
+	font-size: 18px;
+}
+#data ul{
+	float:left;
+}
+#stuffleft{
+	float: left;
+	width: 200px;
+}
+#stuffleft ul{
+	
+}
+#stuffleft li{
+	list-style-type: none;
+	text-align: left;
+	padding: 15px 0px 5px 0px; /* top right bottom left */
+	font-size: 14px;
+}
+#frame{
+	padding: 10px 10px 10px 10px; /* top right bottom left */
+	background: #F3F1F2;
+	float: right;
+	width:560px;
+	height:315px;
+	border: 1px solid #CBB0BE;
+	margin: 50px 50px 50px 50px; /* top right bottom left */
+}
+#stuff{
+	height: 500px;
+	padding: 5px 50px 50px 50px; /* top right bottom left */
+}
