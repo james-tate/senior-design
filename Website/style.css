@@ -168,9 +168,9 @@ body{
 	list-style: none;
 }
 #teaminfo{
-	height: 100px;
+	height: 115px;
 	text-indent: 0px;
-	padding: 25px 25px 25px 25px;
+	padding: 10px 25px 25px 25px;
 	margin-bottom: 15px;
 	text-align: left;
 }
@@ -183,7 +183,7 @@ body{
 	width: 200px;
 	height: 305px;
 	margin-top: 15px;
-	padding: 10px 10px 10px 10px; /* top right bottom left */
+	padding: 20px 10px 10px 10px; /* top right bottom left */
 	background: #F3F1F2;
 	margin-right: 50px;
 }
