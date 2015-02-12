@@ -1,0 +1,1247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>approx_match.py - provide approximate matching to support code and web synchronization &mdash; Project Name version 0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/CodeChat.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'version 0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Name version 0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">Project Name version 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body">
+            
+  <div class="section" id="approx-match-py-provide-approximate-matching-to-support-code-and-web-synchronization">
+<h1>approx_match.py - provide approximate matching to support code and web synchronization<a class="headerlink" href="#approx-match-py-provide-approximate-matching-to-support-code-and-web-synchronization" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#findapproxtextintarget">findApproxTextInTarget</a> function in this module searches a target string
+for the best match to characters about an anchor point in a source string. In
+particular, it first locates a block of target text which forms the closest
+approximate match for source characters about the anchor. Then, it looks for
+the (almost) longest possible exact match between source characters about the
+anchor and the block of target text found in the first step.</p>
+<div class="section" id="imports">
+<h2>Imports<a class="headerlink" href="#imports" title="Permalink to this headline">¶</a></h2>
+<p>These are listed in the order prescribed by <a class="reference external" href="http://www.python.org/dev/peps/pep-0008/#imports">PEP 8</a>.</p>
+<div class="section" id="library-imports">
+<h3>Library imports<a class="headerlink" href="#library-imports" title="Permalink to this headline">¶</a></h3>
+<p>For debugging.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">codecs</span>
+<span class="kn">import</span> <span class="nn">cgi</span>
+<span class="kn">import</span> <span class="nn">os</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="third-party-imports">
+<h3>Third-party imports<a class="headerlink" href="#third-party-imports" title="Permalink to this headline">¶</a></h3>
+<p>For approximate pattern matching, this module uses the Python port of <a class="reference external" href="http://hackerboss.com/approximate-regex-matching-in-python">TRE</a>.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">tre</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="for-debug">
+<h2>For debug<a class="headerlink" href="#for-debug" title="Permalink to this headline">¶</a></h2>
+<p>Write the results of a match to an HTML file if enabled.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="n">ENABLE_LOG</span> <span class="o">=</span> <span class="k">False</span>
+</pre></div>
+</div>
+<p>Given a search result, format it in HTML: create a &lt;pre&gt; entry with the text,
+hilighting from the leftAnchor to the searchAnchor in one color and from
+searchAnchor to rightAnchor in another color. Show the anchor with a big
+yellow X marks the spot.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">def</span> <span class="nf">htmlFormatSearchInput</span><span class="p">(</span><span class="n">searchText</span><span class="p">,</span> <span class="n">leftAnchor</span><span class="p">,</span> <span class="n">searchAnchor</span><span class="p">,</span> <span class="n">rightAnchor</span><span class="p">,</span>
+  <span class="n">showX</span><span class="o">=</span><span class="k">True</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Divide the text into four pieces based on the three anchors. Escape them
+for use in HTML.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">beforeLeft</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">searchText</span><span class="p">[:</span><span class="n">leftAnchor</span><span class="p">])</span>
+    <span class="n">leftToAnchor</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">searchText</span><span class="p">[</span><span class="n">leftAnchor</span><span class="p">:</span><span class="n">searchAnchor</span><span class="p">])</span>
+    <span class="n">anchorToRight</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">searchText</span><span class="p">[</span><span class="n">searchAnchor</span><span class="p">:</span><span class="n">rightAnchor</span><span class="p">])</span>
+    <span class="n">afterRight</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">searchText</span><span class="p">[</span><span class="n">rightAnchor</span><span class="p">:])</span>
+
+    <span class="k">return</span> <span class="p">(</span> <span class="p">(</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Use preformatted text so spaces, newlines get
+interpreted correctly. Include all text up to the
+left anchor.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="s">&#39;&lt;pre style=&quot;word-wrap:break-word; white-space:pre-wrap;&quot;&gt;%s&#39;</span> <span class="o">+</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Format text between the left anchor and the search
+anchor with a red background.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="s">&#39;&lt;span style=&quot;background-color:red;&quot;&gt;%s&lt;/span&gt;&#39;</span> <span class="o">+</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Place a huge X marks the spot at the anchor</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="p">(</span><span class="s">&#39;&lt;span style=&quot;color:blue; font-size:xx-large;&quot;&gt;X&lt;/span&gt;&#39;</span> <span class="k">if</span> <span class="n">showX</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Format text between the search anchor and the right
+anchor with a yellow background.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="s">&#39;&lt;span style=&quot;background-color:yellow;&quot;&gt;%s&lt;/span&gt;&#39;</span> <span class="o">+</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Include the text between the right anchor and end of
+text with no special formatting.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="s">&#39;%s&lt;/pre&gt;&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">beforeLeft</span><span class="p">,</span> <span class="n">leftToAnchor</span><span class="p">,</span> <span class="n">anchorToRight</span><span class="p">,</span> <span class="n">afterRight</span><span class="p">)</span> <span class="p">)</span>
+
+</pre></div>
+</div>
+<p>Take these two results and put them side by side in a table.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">def</span> <span class="nf">htmlFormatSearch</span><span class="p">(</span><span class="n">htmlSearchInput</span><span class="p">,</span> <span class="n">htmlSearchResults</span><span class="p">,</span> <span class="n">resultText</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span> <span class="p">(</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Preserve white space in the resultText string.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="s">&#39;&lt;span style=&quot;white-space:pre;&quot;&gt;%s&lt;/span&gt;&lt;br /&gt;</span><span class="se">\n\n</span><span class="s">&#39;</span> <span class="o">+</span>
+      <span class="s">&#39;&lt;table id=&quot;outerTable&quot;&gt;&lt;tr&gt;&lt;th&gt;Search input&lt;/th&gt;&lt;th&gt;Search results&lt;/th&gt;&lt;/tr&gt;</span><span class="se">\n</span><span class="s">&#39;</span>
+      <span class="s">&#39;&lt;tr&gt;&lt;td&gt;%s&lt;/td&gt;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+      <span class="s">&#39;&lt;td&gt;%s&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+      <span class="s">&#39;&lt;br /&gt;&lt;br /&gt;&lt;br /&gt;&#39;</span>
+      <span class="p">)</span> <span class="o">%</span>
+      <span class="p">(</span><span class="n">resultText</span><span class="p">,</span> <span class="n">htmlSearchInput</span><span class="p">,</span> <span class="n">htmlSearchResults</span><span class="p">)</span> <span class="p">)</span>
+
+
+</pre></div>
+</div>
+<p>Create text for a simple web page.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="n">LOG_COUNTER</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">def</span> <span class="nf">htmlTemplate</span><span class="p">(</span><span class="n">body</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">LOG_COUNTER</span>
+
+    <span class="n">LOG_COUNTER</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">(</span> <span class="p">(</span>
+      <span class="sd">&quot;&quot;&quot;&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.01//EN&quot;</span>
+<span class="sd">      &quot;http://www.w3.org/TR/html4/strict.dtd&quot;&gt;&lt;html&gt;</span>
+<span class="sd">      &lt;head&gt;&lt;title&gt;ApproxMatch log #%d&lt;/title&gt;</span>
+<span class="sd">      &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html;charset=utf-8&quot; /&gt;</span>
+<span class="sd">      &lt;style&gt;</span>
+<span class="sd">         table {border-collapse:collapse; table-layout:fixed;}</span>
+<span class="sd">         table td {border:solid 1px; word-wrap:break-all; vertical-align: top;}</span>
+<span class="sd">      &lt;/style&gt;&lt;/head&gt;</span>
+<span class="sd">      &lt;body&gt;%s&lt;/body&gt;&lt;/html&gt;</span>
+<span class="sd">      &quot;&quot;&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">LOG_COUNTER</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span> <span class="p">)</span>
+
+</pre></div>
+</div>
+<p>Given HTML, write it to a file.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">def</span> <span class="nf">writeHtmlLog</span><span class="p">(</span><span class="n">htmlText</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s">&quot;Writing log file to &quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+    <span class="k">with</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;approx_match_log.html&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span> <span class="o">=</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">htmlText</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="findapproxtext">
+<h2>findApproxText<a class="headerlink" href="#findapproxtext" title="Permalink to this headline">¶</a></h2>
+<p>This function performs a single approximate match using <a class="reference external" href="http://hackerboss.com/approximate-regex-matching-in-python">TRE</a>. <a class="reference external" href="http://hackerboss.com/approximate-regex-matching-in-python">TRE</a> stops at
+the best match it finds; this routine makes sure the match found is at least
+10% better than the next best approximate match, thus checking that the
+resulting match is reasonable unique.</p>
+<dl class="docutils">
+<dt>Return value:</dt>
+<dd><ul class="first last">
+<li><p class="first">If there is no unique value, (None, 0, 0)</p>
+</li>
+<li><p class="first">Otherwise, it returns (match, beginInTarget, endInTarget) where:</p>
+<dl class="docutils">
+<dt>match</dt>
+<dd><p class="first last">A TRE match object.</p>
+</dd>
+<dt>beginInTarget</dt>
+<dd><p class="first last">The index into the target string at which the approximate match begins.</p>
+</dd>
+<dt>endInTarget</dt>
+<dd><p class="first last">The index into the target string at which the approximate match ends.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">def</span> <span class="nf">findApproxText</span><span class="p">(</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>Text to search for</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">searchText</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>Text in which to find the searchText</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">targetText</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>Maximum allowable cost for an approximate match. None indicates no maximum cost.</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">cost</span> <span class="o">=</span> <span class="k">None</span><span class="p">):</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>tre.LITERAL specifies that searchText is a literal search string, not
+a regex.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">pat</span> <span class="o">=</span> <span class="n">tre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">searchText</span><span class="p">,</span> <span class="n">tre</span><span class="o">.</span><span class="n">LITERAL</span><span class="p">)</span>
+    <span class="n">fz</span> <span class="o">=</span> <span class="n">tre</span><span class="o">.</span><span class="n">Fuzzyness</span><span class="p">(</span><span class="n">maxerr</span> <span class="o">=</span> <span class="n">cost</span><span class="p">)</span> <span class="k">if</span> <span class="n">cost</span> <span class="k">else</span> <span class="n">tre</span><span class="o">.</span><span class="n">Fuzzyness</span><span class="p">()</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">pat</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">targetText</span><span class="p">,</span> <span class="n">fz</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Store the index into the target string of the first and last matched chars.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">beginInTarget</span><span class="p">,</span> <span class="n">endInTarget</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>TRE picks the first match it finds, even if there is
+more than one match with identical error. So, manually
+call it again excluding the found text to check. In addition,
+make sure this match is unique: it should be 10%
+better than the next best match.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">matchAgain</span> <span class="o">=</span> <span class="n">pat</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">targetText</span><span class="p">[:</span><span class="n">beginInTarget</span><span class="p">]</span> <span class="o">+</span> <span class="n">targetText</span><span class="p">[</span><span class="n">endInTarget</span><span class="p">:],</span> <span class="n">fz</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">matchAgain</span> <span class="ow">and</span> <span class="p">(</span><span class="n">matchAgain</span><span class="o">.</span><span class="n">cost</span> <span class="o">&lt;=</span> <span class="n">match</span><span class="o">.</span><span class="n">cost</span><span class="o">*</span><span class="mf">1.1</span><span class="p">):</span>
+        <span class="c">## print(&#39;Multiple matches &#39; + str(matchAgain.groups()))</span>
+        <span class="k">return</span> <span class="k">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c">## print(searchText + &#39;\n&#39; + targetText[beginInTarget:endInTarget])</span>
+        <span class="k">return</span> <span class="n">match</span><span class="p">,</span> <span class="n">beginInTarget</span><span class="p">,</span> <span class="n">endInTarget</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="findapproxtextintarget">
+<h2>findApproxTextInTarget<a class="headerlink" href="#findapproxtextintarget" title="Permalink to this headline">¶</a></h2>
+<p>This routine first finds the closest approximate match of a substring centered
+around the searchAnchor in the targetText.</p>
+<p>Return value: An (almost) exactly-matching location in the target document, or
+-1 if not found.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">def</span> <span class="nf">findApproxTextInTarget</span><span class="p">(</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>The text composing the entire source document in
+which the search string resides.</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">searchText</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>A location in the source document which should be
+found in the target document.</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">searchAnchor</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>The target text in which the search will be performed.</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">targetText</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>The radius of the substring around the searchAnchor
+that will be approximately matched in the
+targetText: a value of 10 produces a length-20
+substring (10 characters before the anchor, and 10
+after).</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">searchRange</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Look for the best approximate match within the targetText of the source
+substring composed of characters within a radius of the anchor.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">begin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">searchAnchor</span> <span class="o">-</span> <span class="n">searchRange</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">searchText</span><span class="p">),</span> <span class="n">searchAnchor</span> <span class="o">+</span> <span class="n">searchRange</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Empty documents are easy to search.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="n">end</span> <span class="o">&lt;=</span> <span class="n">begin</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Look for a match; record left and right search radii.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">match</span><span class="p">,</span> <span class="n">beginInTarget</span><span class="p">,</span> <span class="n">endInTarget</span> <span class="o">=</span> <span class="n">findApproxText</span><span class="p">(</span><span class="n">searchText</span><span class="p">[</span><span class="n">begin</span><span class="p">:</span><span class="n">end</span><span class="p">],</span> <span class="n">targetText</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If no unique match is found, try again with an increased search radius.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+        <span class="n">begin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">searchAnchor</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">searchRange</span><span class="o">*</span><span class="mf">1.5</span><span class="p">))</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">searchText</span><span class="p">),</span> <span class="n">searchAnchor</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">searchRange</span><span class="o">*</span><span class="mf">1.5</span><span class="p">))</span>
+        <span class="n">match</span><span class="p">,</span> <span class="n">beginInTarget</span><span class="p">,</span> <span class="n">endInTarget</span> <span class="o">=</span> <span class="n">findApproxText</span><span class="p">(</span><span class="n">searchText</span><span class="p">[</span><span class="n">begin</span><span class="p">:</span><span class="n">end</span><span class="p">],</span> <span class="n">targetText</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ENABLE_LOG</span><span class="p">:</span>
+                <span class="n">si</span> <span class="o">=</span> <span class="n">htmlFormatSearchInput</span><span class="p">(</span><span class="n">searchText</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">searchAnchor</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+                <span class="n">sr</span> <span class="o">=</span> <span class="n">htmlFormatSearchInput</span><span class="p">(</span><span class="n">targetText</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">fs</span> <span class="o">=</span> <span class="n">htmlFormatSearch</span><span class="p">(</span><span class="n">si</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="s">&quot;No unique match found.&quot;</span><span class="p">)</span>
+                <span class="n">ht</span> <span class="o">=</span> <span class="n">htmlTemplate</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
+                <span class="n">writeHtmlLog</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">ENABLE_LOG</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Log the initial match results</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">si</span> <span class="o">=</span> <span class="n">htmlFormatSearchInput</span><span class="p">(</span><span class="n">searchText</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">searchAnchor</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="n">sr</span> <span class="o">=</span> <span class="n">htmlFormatSearchInput</span><span class="p">(</span><span class="n">targetText</span><span class="p">,</span> <span class="n">beginInTarget</span><span class="p">,</span> <span class="n">beginInTarget</span><span class="p">,</span>
+          <span class="n">endInTarget</span><span class="p">,</span> <span class="k">False</span><span class="p">)</span>
+        <span class="n">fs</span> <span class="o">=</span> <span class="n">htmlFormatSearch</span><span class="p">(</span><span class="n">si</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="s">&quot;Initial TRE results&quot;</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Get a search and target substring from the <a class="reference external" href="http://hackerboss.com/approximate-regex-matching-in-python">TRE</a> match.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">searchPattern</span> <span class="o">=</span> <span class="n">searchText</span><span class="p">[</span><span class="n">begin</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+    <span class="n">targetSubstring</span> <span class="o">=</span> <span class="n">targetText</span><span class="p">[</span><span class="n">beginInTarget</span><span class="p">:</span><span class="n">endInTarget</span><span class="p">]</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Use the <a class="reference external" href="http://en.wikipedia.org/wiki/Longest_common_subsequence_problem">LCS</a> algorithm to perform a more exact match. This algorithm
+runs in O(NM) time, compared to <a class="reference external" href="http://hackerboss.com/approximate-regex-matching-in-python">TRE</a>&#8216;s O(N) for most cases (it <em>can</em> be
+O(M^2N) for rare cases &#8211; see <a class="reference external" href="http://hackerboss.com/approximate-regex-matching-in-python">TRE</a>&#8216;s README file), where
+N = len(searchText) and M = len(largetText). Therefore, let <a class="reference external" href="http://hackerboss.com/approximate-regex-matching-in-python">TRE</a> do an
+initial, faster search then do a more exact refine using <a class="reference external" href="http://en.wikipedia.org/wiki/Longest_common_subsequence_problem">LCS</a>.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">relativeSearchAnchor</span> <span class="o">=</span> <span class="n">searchAnchor</span> <span class="o">-</span> <span class="n">begin</span>
+    <span class="n">offset</span><span class="p">,</span> <span class="n">lcsString</span> <span class="o">=</span> <span class="n">refineSearchResult</span><span class="p">(</span><span class="n">searchPattern</span><span class="p">,</span> <span class="n">relativeSearchAnchor</span><span class="p">,</span>
+      <span class="n">targetSubstring</span><span class="p">,</span> <span class="n">ENABLE_LOG</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">offset</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">beginInTarget</span>
+
+    <span class="k">if</span> <span class="n">ENABLE_LOG</span><span class="p">:</span>
+        <span class="n">si</span> <span class="o">=</span> <span class="n">htmlFormatSearchInput</span><span class="p">(</span><span class="n">searchText</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">searchAnchor</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">sr</span> <span class="o">=</span> <span class="n">htmlFormatSearchInput</span><span class="p">(</span><span class="n">targetText</span><span class="p">,</span> <span class="n">beginInTarget</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span>
+              <span class="n">endInTarget</span><span class="p">)</span>
+            <span class="n">fs</span> <span class="o">+=</span> <span class="n">htmlFormatSearch</span><span class="p">(</span><span class="n">si</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="s">&quot;Match was &#39;%s&#39;&quot;</span> <span class="o">%</span> <span class="n">lcsString</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sr</span> <span class="o">=</span> <span class="n">htmlFormatSearchInput</span><span class="p">(</span><span class="n">targetText</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">fs</span> <span class="o">+=</span> <span class="n">htmlFormatSearch</span><span class="p">(</span><span class="n">si</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="s">&quot;No unique match found.&quot;</span><span class="p">)</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">htmlTemplate</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
+        <span class="n">writeHtmlLog</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">offset</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="refinesearchresult">
+<h2>refineSearchResult<a class="headerlink" href="#refinesearchresult" title="Permalink to this headline">¶</a></h2>
+<p>This function performs identically to <a class="reference internal" href="#findapproxtextintarget">findApproxTextInTarget</a>, but uses a more
+expensive and expact algorithm to compute the result.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">def</span> <span class="nf">refineSearchResult</span><span class="p">(</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>The text composing the entire source document in
+which the search string resides.</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">searchText</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>A location in the source document which should be
+found in the target document.</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">searchAnchor</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>The target text in which the search will be performed.</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">targetText</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div>True to return part of the resulting string as well; otherwise, the returned
+lcsString will be empty. To get the full LCS string returned, pass
+searchAnchor = 0. Used for testing.</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+  <span class="n">returnLcsString</span><span class="o">=</span><span class="k">False</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div></div></blockquote>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>Find the longest common substring (<a class="reference external" href="http://en.wikipedia.org/wiki/Longest_common_subsequence_problem">LCS</a>
+between the source and target strings. The code was adopted from
+<a class="reference external" href="http://rosettacode.org/wiki/Longest_common_subsequence#Dynamic_Programming_6">Rosettacode</a>.</p>
+<p>A note on indices used in this algorithm:</p>
+<div class="highlight-python3"><div class="highlight"><pre><span class="n">The</span> <span class="n">string</span> <span class="n">s</span> <span class="o">=</span> <span class="n">abc</span><span class="p">:</span>                        <span class="n">a</span> <span class="n">b</span> <span class="n">c</span>
+<span class="n">Python</span> <span class="n">string</span> <span class="n">index</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="n">s</span><span class="p">[</span><span class="n">n</span><span class="p">]):</span>           <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span>
+<span class="n">LCS</span> <span class="n">table</span> <span class="n">index</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="n">x</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">=</span> <span class="n">n</span><span class="p">):</span>         <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span>
+<span class="n">Qt</span> <span class="n">cursor</span> <span class="n">anchor</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="n">searchAnchor</span> <span class="o">=</span> <span class="n">n</span><span class="p">):</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<p>So, a given x or y value refers to a table index or, equivalently, an
+anchor to their right.</p>
+<p>Initialize the substring length table entries to 0.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targetText</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">searchText</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Determine the length of the longest common subsequence and store this in
+the table.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">searchText</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">targetText</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>When characters match, increase the substring length. Otherwise,
+the use maximum substring length found thus far.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+                <span class="n">lengths</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">lengths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lengths</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">lengths</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">lengths</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If LCS fails to find a common subsequence, then set the offset to -1 and
+inform <tt class="docutils literal"><span class="pre">findApproxTextInTarget</span></tt> that no match is found. This rarely
+happens since TRE has preprocessed input string.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="n">lengths</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;&#39;</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>Walk through the table, read the LCS string out from the table and
+finding the requested targetAnchor. This is a bit tricky:</p>
+<div class="line-block">
+<div class="line">Interesting case 1:</div>
+<div class="line-block">
+<div class="line">searchText = ab</div>
+<div class="line">searchAnchor: between <tt class="docutils literal"><span class="pre">a</span></tt> and <tt class="docutils literal"><span class="pre">b</span></tt>.</div>
+<div class="line">targetText = a&#8211;b</div>
+</div>
+<div class="line">There&#8217;s no clear correct answer for the returned cursor anchor. The most
+natural answer would be between <tt class="docutils literal"><span class="pre">a-</span></tt> and <tt class="docutils literal"><span class="pre">-b</span></tt>. Therefore, we want to
+interpolate between the two target cursor anchors in this case.</div>
+</div>
+<div class="line-block">
+<div class="line">Interesting case 2a:</div>
+<div class="line-block">
+<div class="line">searchText = Chapter 1:Once upon a time</div>
+<div class="line">targetText = :&#8212;&#8212;&#8212;Once upon a time</div>
+<div class="line">searchAnchor: between <tt class="docutils literal"><span class="pre">Chapter</span> <span class="pre">1:</span></tt> and <tt class="docutils literal"><span class="pre">Once</span> <span class="pre">upon</span> <span class="pre">a</span> <span class="pre">time</span></tt>.</div>
+</div>
+<div class="line">The LCS in this case is <tt class="docutils literal"><span class="pre">:Once</span> <span class="pre">upon</span> <span class="pre">a</span> <span class="pre">time</span></tt>. There are two mechanically
+value answers: an anchor to the right of the colon, or to the left of the
+O. We obviously want the anchor to the left of the O.</div>
+</div>
+<div class="line-block">
+<div class="line">Interesting case 2b:</div>
+<div class="line-block">
+<div class="line">searchText = Once upon a time, there lived</div>
+<div class="line">targetText = Once upon a time&#8212;&#8212;&#8212;&#8212;,</div>
+<div class="line">searchAnchor: between <tt class="docutils literal"><span class="pre">Once</span> <span class="pre">upon</span> <span class="pre">a</span> <span class="pre">time</span></tt> and <tt class="docutils literal"><span class="pre">,</span> <span class="pre">there</span> <span class="pre">lived</span></tt>.</div>
+</div>
+<div class="line">The LCS in this case is <tt class="docutils literal"><span class="pre">Once</span> <span class="pre">upon</span> <span class="pre">a</span> <span class="pre">time,</span></tt>. There are two mechanically
+valid answers: an anchor to the right of the e, or to the left of the
+comma. We obviously want the anchor to the right of the e.</div>
+</div>
+<p>So, in these cases, prefer the side with the longest consectuive match.
+Given the type of text we&#8217;re matching (some ignorable markup mixed with
+valid text), picking the valid text instead of interpolating seems best.</p>
+<p>Therefore, we need to find the targetText index of both sides of the match
+(unless the match occurs at the beginning or end of the string). If both
+sides of the match refer to the same anchor (i.e. rightIndex == leftIndex + 1),
+then return the anchor between these to characters. Otherwise, return an
+anchor based on which side has more characters in their portion of the lcs
+string.</p>
+<div class="line-block">
+<div class="line">Interesting case 3:</div>
+<div class="line-block">
+<div class="line">searchText = a&#8211;b</div>
+<div class="line">targetText = ab</div>
+<div class="line">searchAnchor: between <tt class="docutils literal"><span class="pre">a-</span></tt> and <tt class="docutils literal"><span class="pre">-b</span></tt>.</div>
+</div>
+<div class="line">The characters near searchAnchor don&#8217;t appear in targetText. So, pick the
+nearest targetText matches (a and b).</div>
+</div>
+<p>So, walk backwards through the table.</p>
+<p>For debug, compute the lcs string.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">lcsString</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><div class="line-block">
+<div class="line">x gives the searchText table index;</div>
+<div class="line">y gives the targetText table index.</div>
+<div class="line">Start at the end of the table.</div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">searchText</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">targetText</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Save the table index of the last matching character found.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">lastMatchIndex</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Record the length of the lcs match.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">lcsLen</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>No anchor placement ambiguioty yet exists.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">matchIndices</span> <span class="o">=</span> <span class="k">None</span>
+    <span class="k">while</span> <span class="n">x</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lengths</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">lengths</span><span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="n">y</span><span class="p">]:</span>
+            <span class="n">x</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">lengths</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">lengths</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">y</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">searchText</span><span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">targetText</span><span class="p">[</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>For debug purposes, uncomment the line below.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="c">##print(&#39;x = %d, y = %d, searchText[x - 1] = %s, targetText[y - 1] = %s&#39; % (x, y, searchText[x - 1], targetText[y - 1]))</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>On a match at or after the anchor (case 3 above &#8211; the anchor
+may lie between non-matching characters)...</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">searchAnchor</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>...we now have a matched character index to the left of the
+anchor. lastMatchIndex holds the matched character index to
+the right of the anchor.</p>
+<p>In the simple case either:</p>
+<ul class="simple">
+<li>These refer to adjacent characters, making the resulting
+anchor position unambiguous: place it between these two
+characters (to the left of lastMatchIndex == to the right of
+y).</li>
+<li>Or, this refers to the last matching character in the
+targetText (implying lastMatchIndex == y + 1), again making
+anchor placement unambiguous: to the right of y.</li>
+</ul>
+<p>In either case, return y, which refers to the desired anchor.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="n">y</span> <span class="o">==</span> <span class="n">lastMatchIndex</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">lcsString</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Otherwise, we&#8217;re have to distinguish between case 2a and 2b
+above by comparing the lcs length before after this point.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="k">else</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Save right LCS length and reset length to record left
+LCS length.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                    <span class="n">rightLcsLen</span> <span class="o">=</span> <span class="n">lcsLen</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">lcsLen</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Store these two indices, for use when the right LCS length
+is known and a decision about which to use can be made.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                    <span class="n">matchIndices</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">lastMatchIndex</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Keep the if x &lt;= searchAnchor from being true, so that the
+LCS algorithm will run to completion to compute the right
+LCS length.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                    <span class="n">searchAnchor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Keep track of the last matched character&#8217;s table index.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">lastMatchIndex</span> <span class="o">=</span> <span class="n">y</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Don&#8217;t compute the LCS string unless it&#8217;s actually needed.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="n">returnLcsString</span><span class="p">:</span>
+                <span class="n">lcsString</span> <span class="o">=</span> <span class="n">searchText</span><span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">lcsString</span>
+            <span class="n">lcsLen</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">x</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">y</span> <span class="o">-=</span> <span class="mi">1</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Resolve an ambiguius anchor if necessary.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="n">matchIndices</span><span class="p">:</span>
+        <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">matchIndices</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>lcsLen holds the left LCS length.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="n">lcsLen</span> <span class="o">&gt;=</span> <span class="n">rightLcsLen</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">l</span><span class="p">,</span> <span class="n">lcsString</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">r</span><span class="p">,</span> <span class="n">lcsString</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>At this point, we traced the LCS to the beginning of either the
+searchText or the targetText, but haven&#8217;t moved through
+the desired searchAnchor. There are two cases:</p>
+<ol class="arabic simple">
+<li>x == 0: when searchAnchor == 0 and the index in y gives the
+corresponding targetText index.</li>
+<li>y == 0: the searchAnchor in the searchText lies before the
+corresponding targetText index. Return y == 0 as the best
+possible corresponding index.</li>
+</ol>
+<p>Therefore, return y.</p>
+<p>Some examples:</p>
+<ul class="simple">
+<li>searchText = &#8216;abcd&#8217;, searchAnchor = 0 (before &#8216;abcd&#8217;),
+targetText = &#8216;_abc&#8217;, then y == 1 when x == 0, which lies between
+the characters &#8216;_&#8217; and &#8216;abc&#8217; in the targetText.</li>
+<li>searchText = &#8216;__ab&#8217;, searchAnchor = 1 (between &#8216;_&#8217; and &#8216;_ab&#8217;),
+targetText = &#8216;ab&#8217;, then x == 1 when y == 0, which is the beginning
+of the targetText.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">lcsString</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">Project Name version 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Author.
+      Last updated on Dec, 12, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

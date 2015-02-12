@@ -1,0 +1,3042 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>preview.py - HTML, Markdown and ReST preview &mdash; Project Name version 0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/CodeChat.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'version 0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Name version 0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">Project Name version 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body">
+            
+  <div class="section" id="preview-py-html-markdown-and-rest-preview">
+<h1>preview.py - HTML, Markdown and ReST preview<a class="headerlink" href="#preview-py-html-markdown-and-rest-preview" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="imports">
+<h2>Imports<a class="headerlink" href="#imports" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="library-imports">
+<h3>Library imports<a class="headerlink" href="#library-imports" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">Queue</span>
+<span class="kn">import</span> <span class="nn">StringIO</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">cgi</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+<span class="kn">import</span> <span class="nn">codecs</span>
+
+</pre></div>
+</div>
+</div>
+<div class="section" id="third-party-imports">
+<h3>Third-party imports<a class="headerlink" href="#third-party-imports" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">PyQt4.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span><span class="p">,</span> <span class="n">QSize</span><span class="p">,</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QThread</span><span class="p">,</span> <span class="n">QTimer</span><span class="p">,</span> <span class="n">QUrl</span>
+<span class="kn">from</span> <span class="nn">PyQt4.QtGui</span> <span class="k">import</span> <span class="n">QDesktopServices</span><span class="p">,</span> <span class="n">QFileDialog</span><span class="p">,</span> <span class="n">QIcon</span><span class="p">,</span> <span class="n">QMessageBox</span><span class="p">,</span> <span class="n">QWidget</span>
+<span class="kn">from</span> <span class="nn">PyQt4.QtWebKit</span> <span class="k">import</span> <span class="n">QWebPage</span>
+<span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">uic</span>
+
+</pre></div>
+</div>
+</div>
+<div class="section" id="local-imports">
+<h3>Local imports<a class="headerlink" href="#local-imports" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">enki.core.core</span> <span class="k">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">enki.widgets.dockwidget</span> <span class="k">import</span> <span class="n">DockWidget</span>
+<span class="kn">from</span> <span class="nn">enki.plugins.preview</span> <span class="k">import</span> <span class="n">isHtmlFile</span>
+<span class="kn">from</span> <span class="nn">preview_sync</span> <span class="k">import</span> <span class="n">PreviewSync</span>
+<span class="kn">from</span> <span class="nn">enki.lib.get_console_output</span> <span class="k">import</span> <span class="n">get_console_output</span>
+
+</pre></div>
+</div>
+<p>Likewise, attempt importing CodeChat; failing that, disable the CodeChat feature.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">try</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Needed to access CodeChat.__file__; not importing this, but using the
+other CodeChat.* imports below, doesn&#8217;t define this.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="kn">import</span> <span class="nn">CodeChat</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">CodeChat</span> <span class="o">=</span> <span class="k">None</span>
+    <span class="n">CodeToRest</span> <span class="o">=</span> <span class="k">None</span>
+    <span class="n">LSO</span> <span class="o">=</span> <span class="k">None</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">CodeChat.CodeToRest</span> <span class="k">as</span> <span class="nn">CodeToRest</span>
+    <span class="kn">import</span> <span class="nn">CodeChat.LanguageSpecificOptions</span> <span class="k">as</span> <span class="nn">LSO</span>
+
+</pre></div>
+</div>
+<p>Determine if we&#8217;re frozen with Pyinstaller or not.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="s">&#39;frozen&#39;</span><span class="p">,</span> <span class="k">False</span><span class="p">):</span>
+    <span class="n">isFrozen</span> <span class="o">=</span> <span class="k">True</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">isFrozen</span> <span class="o">=</span> <span class="k">False</span>
+
+<span class="k">def</span> <span class="nf">commonPrefix</span><span class="p">(</span><span class="o">*</span><span class="n">dirs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function provides a platform-independent path commonPrefix. It</span>
+<span class="sd">    returns the common path between all directories in input list dirs, assuming</span>
+<span class="sd">    that any relative paths are rooted in the current directory. While`this post</span>
+<span class="sd">    &lt;http://stackoverflow.com/questions/21498939/how-to-circumvent-the-fallacy-of-pythons-os-path-commonprefix&gt;`_</span>
+<span class="sd">    has two solutions, neither are correct; hence, the following code.</span>
+
+<span class="sd">    Parameters: dirs - Directory list.</span>
+<span class="sd">    Return value: the common path prefix shared by all input directories.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>corner case (empty input list)</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dirs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>Path cleaning toolset:</p>
+<ul class="simple">
+<li><strong>realpath</strong> follows symbolic links, so they will be compared in
+terms of what they refer to. realpath will also evaluate directory
+traversals.<ol class="arabic">
+<li>get Canonical path.</li>
+<li>eliminate symbolic links.</li>
+</ol>
+</li>
+<li><strong>normcase</strong> makes Windows filenames all lowercase, since the
+following code uses case-sensitive string comparions. Windows
+uses case-insensitive naming for its files.<ol class="arabic">
+<li>converts path to lower case for case-insensitive filesystem.</li>
+<li>converts forward slashes to backward slashes (Windows only)</li>
+</ol>
+</li>
+<li><strong>abspath</strong> collapses and evaluates directory traversals like
+<tt class="docutils literal"><span class="pre">./../subdir</span></tt>, to correctly compare absolute and relative paths,
+and normalizes the os.path.sep for the current platform
+(i.e. no <cite>a/b</cite> paths). Similar to <tt class="docutils literal"><span class="pre">normpath(join(os.getcwd(),</span> <span class="pre">path))</span></tt>.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">fullPathList</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">d</span><span class="p">)))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dirs</span><span class="p">]</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Now use <tt class="docutils literal"><span class="pre">commonprefix</span></tt> on absolute paths.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">commonprefix</span><span class="p">(</span><span class="n">fullPathList</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>commonprefix stops at the first dissimilar character, leaving an incomplete
+path name. For example, <tt class="docutils literal"><span class="pre">commonprefix(('aa',</span> <span class="pre">'ab'))</span> <span class="pre">==</span> <span class="pre">'a'</span></tt>. Fix this
+by removing this ending incomplete path if necessary.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">fullPathList</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><tt class="docutils literal"><span class="pre">commonPrefix</span></tt> contains a complete path if the character in
+<tt class="docutils literal"><span class="pre">d</span></tt> after its end is an os.path.sep or the end of the path name.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="ow">and</span> <span class="n">d</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)]</span> <span class="o">!=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>This is an incomplete path. Remove it.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+            <span class="k">break</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If any input directory is absolute path, then commonPrefix will return
+an absolute path.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dirs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">prefix</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If not, we will use the assumption that all relative paths
+are rooted in the current directory. Test whether <tt class="docutils literal"><span class="pre">prefix</span></tt> starts with
+the current working directory. If not, return an absolute path.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">prefix</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">prefix</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span> <span class="k">else</span> <span class="n">prefix</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">):]</span>
+
+
+<span class="k">def</span> <span class="nf">sphinxEnabledForFile</span><span class="p">(</span><span class="n">filePath</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Based on Sphinx settings under core.config()[&#39;Sphinx&#39;], this function</span>
+<span class="sd">    determines whether sphinx can be applied to *filePath*.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sphinxProjectPath</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;ProjectPath&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span> <span class="n">filePath</span> <span class="ow">and</span>
+           <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span> <span class="ow">and</span>
+           <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;ProjectPath&#39;</span><span class="p">])</span> <span class="ow">and</span>
+           <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">sphinxProjectPath</span><span class="p">)</span> <span class="o">==</span> <span class="n">commonPrefix</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="n">sphinxProjectPath</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">copyTemplateFile</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">templateFileName</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">newName</span><span class="o">=</span><span class="k">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For each sphinx project, two files are needed: ``index.rst``as master</span>
+<span class="sd">    document, and ``conf.py`` as sphinx configuration file. Given a file with</span>
+<span class="sd">    ``templateFileName``, it will be copied to destination directory ``dest``.</span>
+<span class="sd">    If any error occurs during copy operation, error information will</span>
+<span class="sd">    be appended to ``errors``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">source</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">dest</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;Input or output directory cannot be None&quot;</span><span class="p">,</span> <span class="k">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">newName</span><span class="p">:</span>
+        <span class="n">newName</span> <span class="o">=</span> <span class="n">templateFileName</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">newName</span><span class="p">)):</span>
+        <span class="n">sourcePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">templateFileName</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">sourcePath</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">newName</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">why</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sourcePath</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">why</span><span class="p">)))</span>
+
+<span class="k">class</span> <span class="nc">ConverterThread</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Thread converts markdown to HTML.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>This signal is emitted by the converter thread when a file has been
+converted to HTML.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">htmlReady</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Path to the file which should be converted to / displayed as HTML.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="n">unicode</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>HTML rendering of the file; empty if the HTML is provided in a file
+specified by the URL below.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="n">unicode</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Error text resulting from the conversion process.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="n">unicode</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>A reference to a file containing HTML rendering. Empty if the second
+parameter above contains the HTML instead.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+      <span class="n">QUrl</span><span class="p">)</span>
+
+    <span class="n">_Task</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s">&quot;Task&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;filePath&quot;</span><span class="p">,</span> <span class="s">&quot;language&quot;</span><span class="p">,</span> <span class="s">&quot;text&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">QThread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">QThread</span><span class="o">.</span><span class="n">LowPriority</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filePath</span><span class="p">,</span> <span class="n">language</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert data and emit result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Task</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="n">language</span><span class="p">,</span> <span class="n">text</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">stop_async</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="k">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_canUseCodeChat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Codechat is available when LSO and CodeToRest can be found,
+and Enki settings enable codechat (config()[&#8216;CodeChat&#8217;][&#8216;Enabled&#8217;] is true).</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;CodeChat&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">LSO</span> <span class="ow">and</span> <span class="n">CodeToRest</span>
+
+    <span class="k">def</span> <span class="nf">_getHtml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">language</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">filePath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get HTML for document</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">language</span> <span class="o">==</span> <span class="s">&#39;Markdown&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convertMarkdown</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="k">None</span><span class="p">,</span> <span class="n">QUrl</span><span class="p">()</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>For ReST, use docutils only if Sphinx isn&#8217;t available.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">elif</span> <span class="n">language</span> <span class="o">==</span> <span class="s">&#39;Restructured Text&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">sphinxEnabledForFile</span><span class="p">(</span><span class="n">filePath</span><span class="p">):</span>
+            <span class="n">htmlUnicode</span><span class="p">,</span> <span class="n">errString</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convertReST</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">htmlUnicode</span><span class="p">,</span> <span class="n">errString</span><span class="p">,</span> <span class="n">QUrl</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">filePath</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Use Sphinx to generate the HTML if possible.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="n">sphinxEnabledForFile</span><span class="p">(</span><span class="n">filePath</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Run the builder.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">errString</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runHtmlBuilder</span><span class="p">()</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>Look for the HTML output.</p>
+<p>Get an absolute path to the output path, which could be relative.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">outputPath</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;OutputPath&#39;</span><span class="p">]</span>
+                <span class="n">projectPath</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;ProjectPath&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">outputPath</span><span class="p">):</span>
+                    <span class="n">outputPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">projectPath</span><span class="p">,</span> <span class="n">outputPath</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Create an htmlPath as OutputPath + remainder of filePath.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">htmlPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outputPath</span> <span class="o">+</span> <span class="n">filePath</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">projectPath</span><span class="p">):])</span>
+                <span class="n">html_file_suffix</span> <span class="o">=</span> <span class="s">u&#39;html&#39;</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">projectPath</span><span class="p">,</span> <span class="s">&#39;sphinx-enki-info.json&#39;</span><span class="p">))</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">html_file_suffix</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">errString</span> <span class="o">=</span> <span class="s">&quot;Warning: assuming .html extension. Use &quot;</span> <span class="o">+</span> \
+                      <span class="s">&quot;the conf.py template to set the extension.</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">errString</span>
+                    <span class="k">pass</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>First place to look: file.html. For example, look for foo.py
+in foo.py.html.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">ext</span> <span class="o">=</span>  <span class="s">u&#39;.&#39;</span> <span class="o">+</span> <span class="n">html_file_suffix</span>
+                <span class="n">htmlFile</span> <span class="o">=</span> <span class="n">htmlPath</span> <span class="o">+</span> <span class="n">ext</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Second place to look: file without extension.html. For
+example, look for foo.html for foo.rst.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">htmlFileAlter</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">htmlPath</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">ext</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">htmlFile</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s">u&#39;&#39;</span><span class="p">,</span> <span class="n">errString</span><span class="p">,</span> <span class="n">QUrl</span><span class="o">.</span><span class="n">fromLocalFile</span><span class="p">(</span><span class="n">htmlFile</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">htmlFileAlter</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s">u&#39;&#39;</span><span class="p">,</span> <span class="n">errString</span><span class="p">,</span> <span class="n">QUrl</span><span class="o">.</span><span class="n">fromLocalFile</span><span class="p">(</span><span class="n">htmlFileAlter</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">(</span><span class="s">&#39;No preview for this type of file.&lt;br&gt;Expect &#39;</span> <span class="o">+</span> <span class="n">htmlFile</span> <span class="o">+</span>
+                            <span class="s">&quot; or &quot;</span> <span class="o">+</span> <span class="n">htmlFileAlter</span><span class="p">,</span> <span class="n">errString</span><span class="p">,</span> <span class="n">QUrl</span><span class="p">())</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Otherwise, fall back to using CodeChat+docutils.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canUseCodeChat</span><span class="p">():</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Use StringIO to pass CodeChat compilation information back to
+the UI.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">errStream</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+                <span class="n">lso</span> <span class="o">=</span> <span class="n">LSO</span><span class="o">.</span><span class="n">LanguageSpecificOptions</span><span class="p">()</span>
+                <span class="n">fileName</span><span class="p">,</span> <span class="n">fileExtension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Check to seee if CodeToRest supportgs this file&#8217;s extension.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="n">fileExtension</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lso</span><span class="o">.</span><span class="n">extension_to_options</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="s">&#39;No preview for this type of file&#39;</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="n">QUrl</span><span class="p">()</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>CodeToRest can render this file. Do so.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">lso</span><span class="o">.</span><span class="n">set_language</span><span class="p">(</span><span class="n">fileExtension</span><span class="p">)</span>
+                <span class="n">htmlString</span> <span class="o">=</span> <span class="n">CodeToRest</span><span class="o">.</span><span class="n">code_to_html_string</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">lso</span><span class="p">,</span> <span class="n">errStream</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Error string might contain characters such as &#8220;&gt;&#8221; and &#8220;&lt;&#8221;,
+they need to be converted to &#8220;&amp;gt;&#8221; and &#8220;&amp;lt;&#8221; such that
+they can be displayed correctly in the log window as html strings.
+This step is handled by <tt class="docutils literal"><span class="pre">cgi.escape</span></tt>.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">errString</span> <span class="o">=</span> <span class="n">errStream</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">errString</span><span class="p">:</span>
+                    <span class="n">errString</span> <span class="o">=</span> <span class="s">&quot;&lt;font color=&#39;red&#39;&gt;&quot;</span> <span class="o">+</span> <span class="n">cgi</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">errString</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;&lt;/font&gt;&#39;</span>
+                <span class="n">errStream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">htmlString</span><span class="p">,</span> <span class="n">errString</span><span class="p">,</span> <span class="n">QUrl</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="s">&#39;No preview for this type of file&#39;</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="n">QUrl</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_convertMarkdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert Markdown to HTML</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">markdown</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Markdown preview requires &lt;i&gt;python-markdown&lt;/i&gt; package&lt;br/&gt;&#39;</span> \
+                   <span class="s">&#39;Install it with your package manager or see &#39;</span> \
+                   <span class="s">&#39;&lt;a href=&quot;http://packages.python.org/Markdown/install.html&quot;&gt;installation instructions&lt;/a&gt;&#39;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">mdx_mathjax</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c">#mathjax doesn&#39;t require import statement if installed as extension</span>
+
+        <span class="n">extensions</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;fenced_code&#39;</span><span class="p">,</span> <span class="s">&#39;nl2br&#39;</span><span class="p">]</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>version 2.0 supports only extension names, not instances</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="n">markdown</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">or</span> \
+           <span class="p">(</span><span class="n">markdown</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">markdown</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+
+            <span class="k">class</span> <span class="nc">_StrikeThroughExtension</span><span class="p">(</span><span class="n">markdown</span><span class="o">.</span><span class="n">Extension</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;http://achinghead.com/python-markdown-adding-insert-delete.html</span>
+<span class="sd">                Class is placed here, because depends on imported markdown, and markdown import is lazy</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">DEL_RE</span> <span class="o">=</span> <span class="s">r&#39;(~~)(.*?)~~&#39;</span>
+                <span class="k">def</span> <span class="nf">extendMarkdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">md_globals</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Create the del pattern</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                    <span class="n">delTag</span> <span class="o">=</span> <span class="n">markdown</span><span class="o">.</span><span class="n">inlinepatterns</span><span class="o">.</span><span class="n">SimpleTagPattern</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEL_RE</span><span class="p">,</span> <span class="s">&#39;del&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Insert del pattern into markdown parser</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                    <span class="n">md</span><span class="o">.</span><span class="n">inlinePatterns</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;del&#39;</span><span class="p">,</span> <span class="n">delTag</span><span class="p">,</span> <span class="s">&#39;&gt;not_strong&#39;</span><span class="p">)</span>
+
+            <span class="n">extensions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_StrikeThroughExtension</span><span class="p">())</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">markdown</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">extensions</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;mathjax&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>  <span class="c"># markdown raises ValueError or ImportError, depends on version</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>it is not clear, how to distinguish missing mathjax from other errors</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="n">markdown</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">extensions</span><span class="p">)</span> <span class="c">#keep going without mathjax</span>
+
+    <span class="k">def</span> <span class="nf">_convertReST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert ReST</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">docutils.core</span>
+            <span class="kn">import</span> <span class="nn">docutils.writers.html4css1</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;Restructured Text preview requires the &lt;i&gt;python-docutils&lt;/i&gt; package.&lt;br/&gt;&#39;</span> \
+                   <span class="s">&#39;Install it with your package manager or see &#39;</span> \
+                   <span class="s">&#39;&lt;a href=&quot;http://pypi.python.org/pypi/docutils&quot;/&gt;this page.&lt;/a&gt;&#39;</span><span class="p">,</span> <span class="k">None</span>
+
+        <span class="n">errStream</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+        <span class="n">settingsDict</span> <span class="o">=</span> <span class="p">{</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Make sure to use Unicode everywhere.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+          <span class="s">&#39;output_encoding&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+          <span class="s">&#39;input_encoding&#39;</span> <span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Don&#8217;t stop processing, no matter what.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+          <span class="s">&#39;halt_level&#39;</span>     <span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Capture errors to a string and return it.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+          <span class="s">&#39;warning_stream&#39;</span> <span class="p">:</span> <span class="n">errStream</span> <span class="p">}</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Frozen-specific settings.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="n">isFrozen</span><span class="p">:</span>
+            <span class="n">settingsDict</span><span class="p">[</span><span class="s">&#39;template&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>The default docutils stylesheet and template uses a relative path,
+which doesn&#8217;t work when frozen ???. Under Unix when not frozen,
+it produces:
+<tt class="docutils literal"><span class="pre">IOError:</span> <span class="pre">[Errno</span> <span class="pre">2]</span> <span class="pre">No</span> <span class="pre">such</span> <span class="pre">file</span> <span class="pre">or</span> <span class="pre">directory:</span>
+<span class="pre">'/usr/lib/python2.7/dist-packages/docutils/writers/html4css1/template.txt'</span></tt>.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+              <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">docutils</span><span class="o">.</span><span class="n">writers</span><span class="o">.</span><span class="n">html4css1</span><span class="o">.</span><span class="n">__file__</span><span class="p">),</span>
+                           <span class="n">docutils</span><span class="o">.</span><span class="n">writers</span><span class="o">.</span><span class="n">html4css1</span><span class="o">.</span><span class="n">Writer</span><span class="o">.</span><span class="n">default_template</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">settingsDict</span><span class="p">[</span><span class="s">&#39;stylesheet_dirs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
+              <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">docutils</span><span class="o">.</span><span class="n">writers</span><span class="o">.</span><span class="n">html4css1</span><span class="o">.</span><span class="n">__file__</span><span class="p">)]</span>
+        <span class="n">htmlString</span> <span class="o">=</span> <span class="n">docutils</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">publish_string</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">writer_name</span><span class="o">=</span><span class="s">&#39;html&#39;</span><span class="p">,</span>
+                                                  <span class="n">settings_overrides</span><span class="o">=</span><span class="n">settingsDict</span><span class="p">)</span>
+        <span class="n">errString</span> <span class="o">=</span> <span class="n">errStream</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">errString</span><span class="p">:</span>
+            <span class="n">errString</span> <span class="o">=</span> <span class="s">&quot;&lt;font color=&#39;red&#39;&gt;&quot;</span> <span class="o">+</span> <span class="n">cgi</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">errString</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;&lt;/font&gt;&#39;</span>
+        <span class="n">errStream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">htmlString</span><span class="p">,</span> <span class="n">errString</span>
+
+    <span class="k">def</span> <span class="nf">_runHtmlBuilder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Build the commond line for Sphinx.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;AdvancedMode&#39;</span><span class="p">]:</span>
+            <span class="n">htmlBuilderCommandLine</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;Cmdline&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;linux&#39;</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If Linux is used, then subprocess cannot take the whole
+commandline as the name of an executable file. Module shlex
+has to be used to parse commandline.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="n">htmlBuilderCommandLine</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">htmlBuilderCommandLine</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>For available builder options, refer to: <a class="reference external" href="http://sphinx-doc.org/builders.html">http://sphinx-doc.org/builders.html</a></div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">htmlBuilderCommandLine</span> <span class="o">=</span> <span class="p">[</span><span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;Executable&#39;</span><span class="p">],</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Place doctrees in the <tt class="docutils literal"><span class="pre">_build</span></tt> directory; by default, Sphinx
+places this in _build/html/.doctrees.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+              <span class="s">&#39;-d&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;_build&#39;</span><span class="p">,</span> <span class="s">&#39;doctrees&#39;</span><span class="p">),</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Source directory &#8211; the current directory, since we&#8217;ll chdir to
+the project directory before executing this.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+              <span class="s">&#39;.&#39;</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Build directory</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+              <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;OutputPath&#39;</span><span class="p">]]</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Invoke it.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cwd</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;ProjectPath&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If the command line is already a string (advanced mode), just print it.
+Otherwise, it&#8217;s a list that should be transformed to a string.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">htmlBuilderCommandLine</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">htmlBuilderCommandLineStr</span> <span class="o">=</span> <span class="n">htmlBuilderCommandLine</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">htmlBuilderCommandLineStr</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">htmlBuilderCommandLine</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&lt;pre&gt;{} : {}</span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="n">htmlBuilderCommandLineStr</span><span class="p">)</span>
+            <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">get_console_output</span><span class="p">(</span><span class="n">htmlBuilderCommandLine</span><span class="p">,</span>
+                                                <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">s</span> <span class="o">+</span> <span class="s">&#39;&lt;font color=red&gt;Failed to execute HTML builder:</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> \
+                   <span class="s">&#39;{}</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">))</span> <span class="o">+</span> \
+                   <span class="s">&#39;Go to Settings -&gt; Settings -&gt; CodeChat to set HTML builder configurations.&lt;/pre&gt;&#39;</span>
+
+        <span class="k">return</span> <span class="n">s</span> <span class="o">+</span> <span class="n">cgi</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">stdout</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;&lt;br&gt;&lt;font color=red&gt;&#39;</span> <span class="o">+</span> <span class="n">cgi</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">stderr</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;&lt;/font&gt;&lt;/pre&gt;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Thread function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="k">True</span><span class="p">:</span>  <span class="c"># exits with break</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>wait task</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>take the last task</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">():</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>  <span class="c"># None is a quit command</span>
+                <span class="k">break</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>TODO: This is ugly. Should pass this exception back to the main
+thread and re-raise it there, or use a QFuture like approach which
+does this automaticlaly.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">html</span><span class="p">,</span> <span class="n">errString</span><span class="p">,</span> <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getHtml</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">language</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">filePath</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">():</span>  <span class="c"># Do not emit results, if having new task</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">htmlReady</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">filePath</span><span class="p">,</span> <span class="n">html</span><span class="p">,</span> <span class="n">errString</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">PreviewDock</span><span class="p">(</span><span class="n">DockWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;GUI and implementation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">closed</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Sent when the _setHtml methods completes.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="n">setHtmlDone</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">DockWidget</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">(),</span> <span class="s">&quot;Previe&amp;w&quot;</span><span class="p">,</span> <span class="n">QIcon</span><span class="p">(</span><span class="s">&#39;:/enkiicons/internet.png&#39;</span><span class="p">),</span> <span class="s">&quot;Alt+W&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">uic</span><span class="o">.</span><span class="n">loadUi</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="s">&#39;Preview.ui&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loadTemplates</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">setLinkDelegationPolicy</span><span class="p">(</span><span class="n">QWebPage</span><span class="o">.</span><span class="n">DelegateAllLinks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">linkClicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onLinkClicked</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">mainFrame</span><span class="p">()</span><span class="o">.</span><span class="n">titleChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_updateTitle</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFocusProxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbEnableJavascript</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onJavaScriptEnabledCheckbox</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>When quitting this program, don&#8217;t rebuild when closing all open
+documents. This can take a long time, particularly if a some of the
+documents are associated with a Sphinx project.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_programRunning</span> <span class="o">=</span> <span class="k">True</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">aboutToTerminate</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_quitingApplication</span><span class="p">)</span>
+
+        <span class="n">core</span><span class="o">.</span><span class="n">workspace</span><span class="p">()</span><span class="o">.</span><span class="n">currentDocumentChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onDocumentChanged</span><span class="p">)</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">workspace</span><span class="p">()</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onTextChanged</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>If the user presses the accept button in the setting dialog, Enki
+will force a rebuild of the whole project.</p>
+<p>TODO: only build if preview settings have been changed.</p>
+<p>In order to make this happen, let <tt class="docutils literal"><span class="pre">_onSettingsDialogAboutToExecute</span></tt> emit
+a signal indicating that the CodeChat setting dialog has been opened. Save
+core.config()[&#8216;Sphinx&#8217;] and core.config()[&#8216;CodeChat&#8217;]. After dialogAccepted
+is detected, compare current settings with the old one. Build if necessary.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">core</span><span class="o">.</span><span class="n">uiSettingsManager</span><span class="p">()</span><span class="o">.</span><span class="n">dialogAccepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>File save actions always trigger a rebuild</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">action</span><span class="p">(</span> <span class="s">&quot;mFile/mSave/aCurrent&quot;</span> <span class="p">)</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">)</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">action</span><span class="p">(</span> <span class="s">&quot;mFile/mSave/aAll&quot;</span> <span class="p">)</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">)</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">action</span><span class="p">(</span> <span class="s">&quot;mFile/mSave/aSaveAs&quot;</span> <span class="p">)</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scrollPos</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vAtEnd</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hAtEnd</span> <span class="o">=</span> <span class="p">{}</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Keep track of which Sphinx template copies we&#8217;ve already asked the
+user about.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sphinxTemplateCheckIgnoreList</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="n">ConverterThread</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">htmlReady</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_setHtml</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span> <span class="o">=</span> <span class="k">None</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If we update Preview on every key press, freezes are noticable (the
+GUI thread draws the preview too slowly).
+This timer is used for drawing Preview 300 ms After user has stopped typing text</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_typingTimer</span> <span class="o">=</span> <span class="n">QTimer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_typingTimer</span><span class="o">.</span><span class="n">setInterval</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_typingTimer</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onCurrentTemplateChanged</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">previewSync</span> <span class="o">=</span> <span class="n">PreviewSync</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_applyJavaScriptEnabled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_isJavaScriptEnabled</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">tbSave</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">onPreviewSave</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Add an attribute to <tt class="docutils literal"><span class="pre">self._widget</span></tt> denoting the splitter location.
+This value will be overwritten when the user changes splitter location.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterErrorStateSize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">199</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormStateSize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormState</span> <span class="o">=</span> <span class="k">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">setSizes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormStateSize</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">splitterMoved</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_splitterMoved</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Don&#8217;t need to schedule document processing; a call to show() does.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+
+    <span class="k">def</span> <span class="nf">_quitingApplication</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_programRunning</span> <span class="o">=</span> <span class="k">False</span>
+
+    <span class="k">def</span> <span class="nf">on_splitterMoved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormState</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormStateSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">sizes</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterErrorStateSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">sizes</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">del_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Uninstall themselves</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_typingTimer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">htmlReady</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_setHtml</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">mainFrame</span><span class="p">()</span><span class="o">.</span><span class="n">loadFinished</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_restoreScrollPos</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c"># already has been disconnected</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previewSync</span><span class="o">.</span><span class="n">del_</span><span class="p">()</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">action</span><span class="p">(</span> <span class="s">&quot;mFile/mSave/aCurrent&quot;</span> <span class="p">)</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">)</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">action</span><span class="p">(</span> <span class="s">&quot;mFile/mSave/aAll&quot;</span> <span class="p">)</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">)</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">action</span><span class="p">(</span> <span class="s">&quot;mFile/mSave/aSaveAs&quot;</span> <span class="p">)</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">stop_async</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Widget is closed. Clear it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">DockWidget</span><span class="o">.</span><span class="n">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_onLinkClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">QDesktopServices</span><span class="o">.</span><span class="n">openUrl</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">()</span><span class="o">.</span><span class="n">statusBar</span><span class="p">()</span><span class="o">.</span><span class="n">showMessage</span><span class="p">(</span><span class="s">&quot;{} opened in a browser&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">toString</span><span class="p">()),</span> <span class="mi">2000</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">()</span><span class="o">.</span><span class="n">statusBar</span><span class="p">()</span><span class="o">.</span><span class="n">showMessage</span><span class="p">(</span><span class="s">&quot;Failed to open {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">toString</span><span class="p">()),</span> <span class="mi">2000</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_updateTitle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pageTitle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Web page title changed. Update own title.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pageTitle</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s">&quot;Previe&amp;w - &quot;</span> <span class="o">+</span> <span class="n">pageTitle</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s">&quot;Previe&amp;w&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_saveScrollPos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save scroll bar position for document</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span> <span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">mainFrame</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">contentsSize</span><span class="p">()</span> <span class="o">==</span> <span class="n">QSize</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="c"># no valida data, nothing to save</span>
+
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">scrollPosition</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scrollPos</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hAtEnd</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">scrollBarMaximum</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">)</span> <span class="o">==</span> <span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vAtEnd</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">scrollBarMaximum</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">)</span> <span class="o">==</span> <span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_restoreScrollPos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ok</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Restore scroll bar position for document</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">workspace</span><span class="p">()</span><span class="o">.</span><span class="n">currentDocument</span><span class="p">()</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c"># nothing to restore if don&#39;t have document</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">mainFrame</span><span class="p">()</span><span class="o">.</span><span class="n">loadFinished</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_restoreScrollPos</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c"># already has been disconnected</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scrollPos</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c"># no data for this document</span>
+
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">mainFrame</span><span class="p">()</span>
+
+        <span class="n">frame</span><span class="o">.</span><span class="n">setScrollPosition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scrollPos</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hAtEnd</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span><span class="p">]:</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">setScrollBarValue</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">scrollBarMaximum</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vAtEnd</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span><span class="p">]:</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">setScrollBarValue</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">scrollBarMaximum</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">))</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Re-sync the re-loaded text.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previewSync</span><span class="o">.</span><span class="n">syncTextToPreview</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_onDocumentChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current document changed, update preview</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_typingTimer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">new</span><span class="o">.</span><span class="n">qutepart</span><span class="o">.</span><span class="n">language</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;Markdown&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">lTemplate</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">lTemplate</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="ow">and</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_clear</span><span class="p">()</span>
+
+    <span class="n">_CUSTOM_TEMPLATE_PATH</span> <span class="o">=</span> <span class="s">&#39;&lt;custom template&gt;&#39;</span>
+    <span class="k">def</span> <span class="nf">_loadTemplates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="s">&#39;templates&#39;</span><span class="p">),</span>
+                     <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/.enki/markdown-templates&#39;</span><span class="p">)]:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">fileName</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                    <span class="n">fullPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">fileName</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fullPath</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">fileName</span><span class="p">,</span> <span class="n">fullPath</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="s">&#39;Custom...&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CUSTOM_TEMPLATE_PATH</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_restorePreviousTemplate</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_restorePreviousTemplate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>restore previous template</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">findText</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Template&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_getCurrentTemplatePath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c"># empty combo</span>
+            <span class="k">return</span> <span class="s">&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="n">unicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">itemData</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_getCurrentTemplate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getCurrentTemplatePath</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;&#39;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s">&#39;Failed to load template {}: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ex</span><span class="p">)</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">()</span><span class="o">.</span><span class="n">statusBar</span><span class="p">()</span><span class="o">.</span><span class="n">showMessage</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">text</span>
+
+    <span class="k">def</span> <span class="nf">_onCurrentTemplateChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update text or show message to the user&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getCurrentTemplatePath</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CUSTOM_TEMPLATE_PATH</span><span class="p">:</span>
+            <span class="n">QMessageBox</span><span class="o">.</span><span class="n">information</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">(),</span>
+                                   <span class="s">&#39;Custom templaes help&#39;</span><span class="p">,</span>
+                                   <span class="s">&#39;&lt;html&gt;See &lt;a href=&quot;https://github.com/hlamer/enki/wiki/Markdown-preview-templates&quot;&gt;&#39;</span>
+                                   <span class="s">&#39;this&lt;/a&gt; wiki page for information about custom templates&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_restorePreviousTemplate</span><span class="p">()</span>
+
+        <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Template&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbTemplate</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_onTextChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">document</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Text changed, update preview</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_typingTimer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_typingTimer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;When shown, update document, if possible.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DockWidget</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scheduleDocumentProcessing</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_scheduleDocumentProcessing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start document processing with the thread.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_programRunning</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_typingTimer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+        <span class="n">document</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">workspace</span><span class="p">()</span><span class="o">.</span><span class="n">currentDocument</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">document</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sphinxEnabledForFile</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">filePath</span><span class="p">()):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_copySphinxProjectTemplate</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">filePath</span><span class="p">())</span>
+            <span class="n">qp</span> <span class="o">=</span> <span class="n">document</span><span class="o">.</span><span class="n">qutepart</span>
+            <span class="n">language</span> <span class="o">=</span> <span class="n">qp</span><span class="o">.</span><span class="n">language</span><span class="p">()</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">qp</span><span class="o">.</span><span class="n">text</span>
+            <span class="k">if</span> <span class="n">document</span><span class="o">.</span><span class="n">qutepart</span><span class="o">.</span><span class="n">language</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;Markdown&#39;</span><span class="p">:</span>
+                <span class="n">language</span> <span class="o">=</span> <span class="s">&#39;Markdown&#39;</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getCurrentTemplate</span><span class="p">()</span> <span class="o">+</span> <span class="n">text</span>
+            <span class="k">elif</span> <span class="n">isHtmlFile</span><span class="p">(</span><span class="n">document</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>No processing needed &#8211; just display it.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_setHtml</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">filePath</span><span class="p">(),</span> <span class="n">text</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">elif</span> <span class="n">language</span> <span class="o">==</span> <span class="s">&#39;Restructured Text&#39;</span><span class="p">:</span>
+                <span class="k">pass</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>Determine whether to initiate a build or not. The underlying
+logic:</p>
+<ul class="simple">
+<li>If Sphinx can&#8217;t process this file, just build it.</li>
+<li>If Sphinx can process this file:<ul>
+<li>If the document isn&#8217;t internally modified, we&#8217;re here because
+the file was saved or the refresh button was pressed. Build it.</li>
+<li>If the document was internally modified and &#8220;insta-build&#8221; is
+enabled (i.e. build only on save is disabled):<ul>
+<li>If the document was not externally modified, then save and
+build.</li>
+<li>If the document was externally modified, DANGER! The user
+needs to decide which file wins (external changes or
+internal changes). Don&#8217;t save and build, since this would
+overwrite external modifications without the user realizing
+what happened. Instead, warn the user.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>As a table, see below. Build, Save, and Warn are the outputs; all
+others are inputs.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="23%" />
+<col width="23%" />
+<col width="16%" />
+<col width="6%" />
+<col width="5%" />
+<col width="5%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Sphinx can process</th>
+<th class="head">Internally modified</th>
+<th class="head">Externally modified</th>
+<th class="head">Build on Save</th>
+<th class="head">Build</th>
+<th class="head">Save</th>
+<th class="head">Warn</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>No</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>No</td>
+<td>X</td>
+<td>X</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr class="row-odd"><td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr class="row-even"><td>Yes</td>
+<td>Yes</td>
+<td>X</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">sphinxCanProcess</span> <span class="o">=</span> <span class="n">sphinxEnabledForFile</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">filePath</span><span class="p">())</span>
+            <span class="n">internallyModified</span> <span class="o">=</span> <span class="n">qp</span><span class="o">.</span><span class="n">document</span><span class="p">()</span><span class="o">.</span><span class="n">isModified</span><span class="p">()</span>
+            <span class="n">externallyModified</span> <span class="o">=</span> <span class="n">document</span><span class="o">.</span><span class="n">isExternallyModified</span><span class="p">()</span>
+            <span class="n">buildOnSave</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;BuildOnSave&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Save first, if needed.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">saveThenBuild</span> <span class="o">=</span> <span class="p">(</span><span class="n">sphinxCanProcess</span> <span class="ow">and</span> <span class="n">internallyModified</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="n">externallyModified</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">buildOnSave</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">saveThenBuild</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Trailing whitespace is not stripped when
+autosaving. When a save is invoked manually,
+trailing whitespace will be stripped if enabled.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                    <span class="n">whitespaceSetting</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&quot;Qutepart&quot;</span><span class="p">][</span><span class="s">&quot;StripTrailingWhitespace&quot;</span><span class="p">]</span>
+                    <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&quot;Qutepart&quot;</span><span class="p">][</span><span class="s">&quot;StripTrailingWhitespace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">False</span>
+                    <span class="n">document</span><span class="o">.</span><span class="n">saveFile</span><span class="p">()</span>
+                    <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&quot;Qutepart&quot;</span><span class="p">][</span><span class="s">&quot;StripTrailingWhitespace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">whitespaceSetting</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Build. Each line is one row in the table above.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span> <span class="p">(</span><span class="ow">not</span> <span class="n">sphinxCanProcess</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="n">sphinxCanProcess</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">internallyModified</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="n">saveThenBuild</span> <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_setHtmlProgress</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>for rest language is already correct</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">filePath</span><span class="p">(),</span> <span class="n">language</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Warn.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="n">sphinxCanProcess</span> <span class="ow">and</span> <span class="n">internallyModified</span> <span class="ow">and</span>
+                <span class="n">externallyModified</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">buildOnSave</span><span class="p">):</span>
+                <span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">()</span><span class="o">.</span><span class="n">appendMessage</span><span class="p">(</span><span class="s">&#39;Warning: file modified externally. Auto-save disabled.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_copySphinxProjectTemplate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documentFilePath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add conf.py, CodeChat.css and index.rst (if ther&#39;re missing)</span>
+<span class="sd">        to the Sphinx project directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;ProjectPath&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sphinxTemplateCheckIgnoreList</span><span class="p">:</span>
+            <span class="k">return</span><span class="p">;</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Check for the existance Sphinx project files. Copy skeleton versions
+of them to the project if necessary.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">sphinxPluginsPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">__file__</span><span class="p">))</span>
+        <span class="n">sphinxTemplatePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sphinxPluginsPath</span><span class="p">,</span> <span class="s">&#39;sphinx_templates&#39;</span><span class="p">)</span>
+        <span class="n">sphinxProjectPath</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;ProjectPath&#39;</span><span class="p">]</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">checklist</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;index.rst&#39;</span><span class="p">,</span> <span class="s">&#39;conf.py&#39;</span><span class="p">,</span> <span class="s">&#39;CodeChat.css&#39;</span><span class="p">]</span>
+        <span class="n">missinglist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">checklist</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sphinxProjectPath</span><span class="p">,</span> <span class="n">filename</span><span class="p">)):</span>
+                <span class="n">missinglist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">missinglist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">errors</span>
+
+        <span class="n">question</span> <span class="o">=</span> <span class="n">QMessageBox</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Yes</span><span class="p">)</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">setDefaultButton</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Yes</span><span class="p">)</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">No</span><span class="p">)</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">addButton</span><span class="p">(</span><span class="s">&quot;Not now&quot;</span><span class="p">,</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">RejectRole</span><span class="p">)</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s">&quot;Enki&quot;</span><span class="p">)</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s">&quot;Sphinx project at:</span><span class="se">\n</span><span class="s"> &quot;</span> <span class="o">+</span> <span class="n">sphinxProjectPath</span>
+                         <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">is missing the template file(s): &quot;</span><span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missinglist</span><span class="p">)</span>
+                         <span class="o">+</span> <span class="s">&quot;. Auto-generate those file(s)?&quot;</span><span class="p">)</span>
+        <span class="n">question</span><span class="o">.</span><span class="n">setDefaultButton</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Yes</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>For testing, check for test-provided button presses</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sphinxTemplateCheckIgnoreList</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sphinxTemplateCheckIgnoreList</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sphinxTemplateCheckIgnoreList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">question</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">Yes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">No</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sphinxTemplateCheckIgnoreList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sphinxProjectPath</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">copyTemplateFile</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">sphinxTemplatePath</span><span class="p">,</span> <span class="s">&#39;index.rst&#39;</span><span class="p">,</span> <span class="n">sphinxProjectPath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;CodeChat&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">CodeChat</span><span class="p">:</span>
+            <span class="n">codeChatPluginsPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">CodeChat</span><span class="o">.</span><span class="n">__file__</span><span class="p">))</span>
+            <span class="n">codeChatTemplatePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">codeChatPluginsPath</span><span class="p">,</span> <span class="s">&#39;template&#39;</span><span class="p">)</span>
+            <span class="n">copyTemplateFile</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">codeChatTemplatePath</span><span class="p">,</span> <span class="s">&#39;conf.py&#39;</span><span class="p">,</span> <span class="n">sphinxProjectPath</span><span class="p">)</span>
+            <span class="n">copyTemplateFile</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">codeChatTemplatePath</span><span class="p">,</span> <span class="s">&#39;CodeChat.css&#39;</span><span class="p">,</span> <span class="n">sphinxProjectPath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">copyTemplateFile</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">sphinxTemplatePath</span><span class="p">,</span> <span class="s">&#39;conf.py&#39;</span><span class="p">,</span> <span class="n">sphinxProjectPath</span><span class="p">)</span>
+
+        <span class="n">errInfo</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">:</span>
+            <span class="n">errInfo</span> <span class="o">+=</span> <span class="s">&quot;Copy from &quot;</span> <span class="o">+</span> <span class="n">error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot; to &quot;</span> <span class="o">+</span> <span class="n">error</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot; caused error &quot;</span> <span class="o">+</span> <span class="n">error</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="k">if</span> <span class="n">errInfo</span><span class="p">:</span>
+            <span class="n">QMessageBox</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;Sphinx template file copy error&quot;</span><span class="p">,</span>
+            <span class="s">&quot;Copy template project files failed. The following errors are returned:&lt;br&gt;&quot;</span>
+            <span class="o">+</span> <span class="n">errInfo</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">errors</span>
+
+    <span class="k">def</span> <span class="nf">_setHtml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filePath</span><span class="p">,</span> <span class="n">html</span><span class="p">,</span> <span class="n">errString</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">baseUrl</span><span class="o">=</span><span class="n">QUrl</span><span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;Set HTML to the view and restore scroll bars position.</span>
+<span class="sd">        Called by the thread</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saveScrollPos</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visiblePath</span> <span class="o">=</span> <span class="n">filePath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">mainFrame</span><span class="p">()</span><span class="o">.</span><span class="n">loadFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_restoreScrollPos</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">baseUrl</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">setHtml</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">baseUrl</span><span class="o">=</span><span class="n">QUrl</span><span class="o">.</span><span class="n">fromLocalFile</span><span class="p">(</span><span class="n">filePath</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">setUrl</span><span class="p">(</span><span class="n">baseUrl</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">teLog</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If there were messages from the conversion process, extract a count of
+errors and warnings from these messages.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="n">errString</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If there are errors/warnings, expand log window to make it visible</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormState</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormStateSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">sizes</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormState</span> <span class="o">=</span> <span class="k">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">setSizes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterErrorStateSize</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>This code parses the error string to determine get the number of
+warnings and errors. Common docutils error messages read:</p>
+<div class="highlight-python3"><div class="highlight"><pre><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">:</span><span class="mi">1589</span><span class="p">:</span> <span class="p">(</span><span class="n">ERROR</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span> <span class="n">Unknown</span> <span class="n">interpreted</span> <span class="n">text</span> <span class="n">role</span> <span class="s">&quot;ref&quot;</span><span class="o">.</span>
+
+<span class="n">X</span><span class="p">:</span>\<span class="n">ode</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="n">docstring</span> <span class="n">of</span> <span class="n">sympy</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span> <span class="p">(</span><span class="n">ERROR</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span> <span class="n">Unexpected</span> <span class="n">indentation</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>and common sphinx errors read:</p>
+<div class="highlight-python3"><div class="highlight"><pre><span class="n">X</span><span class="p">:</span>\<span class="n">SVM_train</span><span class="o">.</span><span class="n">m</span><span class="o">.</span><span class="n">rst</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span> <span class="n">SEVERE</span><span class="p">:</span> <span class="n">Title</span> <span class="n">overline</span> <span class="o">&amp;</span> <span class="n">underline</span> <span class="n">mismatch</span><span class="o">.</span>
+
+<span class="n">X</span><span class="p">:</span>\<span class="n">indexs</span><span class="o">.</span><span class="n">rst</span><span class="p">:</span><span class="k">None</span><span class="p">:</span> <span class="n">WARNING</span><span class="p">:</span> <span class="n">image</span> <span class="n">file</span> <span class="ow">not</span> <span class="n">readable</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">jpg</span>
+
+<span class="n">X</span><span class="p">:</span>\<span class="n">conf</span><span class="o">.</span><span class="n">py</span><span class="o">.</span><span class="n">rst</span><span class="p">::</span> <span class="n">WARNING</span><span class="p">:</span> <span class="n">document</span> <span class="n">isn</span><span class="s">&#39;t included in any toctree</span>
+</pre></div>
+</div>
+<p>Each error/warning occupies one line. The following <a class="reference external" href="https://docs.python.org/2/library/re.html#regular-expression-syntax">regular
+expression</a>
+is designed to find the error position (1589/None) and message
+type (ERROR/WARNING/SEVERE). Extra spaces are added to show which
+parts of the example string it matches. For more details about
+Python regular expressions, refer to the
+<a class="reference external" href="https://docs.python.org/2/library/re.html">re docs</a>.</p>
+<p>Examining this expression one element at a time:</p>
+<div class="highlight-python3"><div class="highlight"><pre><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">:</span><span class="mi">1589</span><span class="p">:</span>        <span class="p">(</span><span class="n">ERROR</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="n">Unknown</span> <span class="n">interpreted</span> <span class="n">text</span> <span class="n">role</span> <span class="s">&quot;ref&quot;</span><span class="o">.</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">errPosRe</span> <span class="o">=</span> <span class="s">&#39;:(\d*|None): &#39;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>Find the first occurence of a pair of colons.
+Between them there can be numbers or &#8220;None&#8221; or nothing. For example,
+this expression matches the string &#8221;:1589:&#8221; or string &#8221;:None:&#8221; or
+string &#8221;::&#8221;. Next:</p>
+<div class="highlight-python3"><div class="highlight"><pre><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">:</span><span class="mi">1589</span><span class="p">:</span>        <span class="p">(</span><span class="n">ERROR</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="n">Unknown</span> <span class="n">interpreted</span> <span class="n">text</span> <span class="n">role</span> <span class="s">&quot;ref&quot;</span><span class="o">.</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">errTypeRe</span> <span class="o">=</span>             <span class="s">&#39;\(?(WARNING|ERROR|SEVERE)&#39;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Next match the error type, which can
+only be &#8220;WARNING&#8221;, &#8220;ERROR&#8221; or &#8220;SEVERE&#8221;. Before this error type the
+message may optionally contain one left parenthesis.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">errEolRe</span> <span class="o">=</span> <span class="s">&#39;.*$&#39;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>Since one error message occupies one line, a <tt class="docutils literal"><span class="pre">*</span></tt>
+quantifier is used along with end-of-line <tt class="docutils literal"><span class="pre">$</span></tt> to make sure only
+the first match is used in each line.</p>
+<p>TODO: Is this necesary? Is there any case where omitting this
+causes a failure?</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">errPosRe</span> <span class="o">+</span> <span class="n">errTypeRe</span> <span class="o">+</span> <span class="n">errEolRe</span><span class="p">,</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>The message usually contain multiple lines; search each line
+for errors and warnings.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+              <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Use findall to return all matches in the message, not just the
+first.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">errString</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>The variable <tt class="docutils literal"><span class="pre">result</span></tt> now contains a list of tuples, where each
+tuples contains the two matche groups (line number, error_string).
+For example:</p>
+<div class="highlight-python3"><div class="highlight"><pre><span class="p">[(</span><span class="s">&#39;1589&#39;</span><span class="p">,</span> <span class="s">&#39;ERROR&#39;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Therefeore, the second element of each tuple, represented as x[1],
+is the error_string. The next two lines of code will collect all
+ERRORs/SEVEREs and WARNINGs found in the error_string separately.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">errNum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s">u&#39;ERROR&#39;</span> <span class="ow">or</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s">u&#39;SEVERE&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+            <span class="n">warningNum</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;WARNING&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Report these results this to the user.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">status</span> <span class="o">=</span> <span class="s">&#39;Warning(s): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">warningNum</span><span class="p">)</span> \
+                     <span class="o">+</span> <span class="s">&#39;, error(s): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">errNum</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">teLog</span><span class="o">.</span><span class="n">appendHtml</span><span class="p">(</span><span class="s">&#39;&lt;pre&gt;&#39;</span> <span class="o">+</span> <span class="n">errString</span> <span class="o">+</span> <span class="s">&#39;&lt;font color=red&gt;&#39;</span> \
+                                          <span class="o">+</span> <span class="n">status</span> <span class="o">+</span> <span class="s">&#39;&lt;/font&gt;&lt;/pre&gt;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Update the progress bar.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">color</span> <span class="o">=</span> <span class="s">&#39;red&#39;</span> <span class="k">if</span> <span class="n">errNum</span> <span class="k">else</span> <span class="s">&#39;#FF9955&#39;</span> <span class="k">if</span> <span class="n">warningNum</span> <span class="k">else</span> <span class="k">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setHtmlProgress</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If there are no errors/warnings, collapse the log window (can mannually
+expand it back to visible)</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormState</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterErrorStateSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">sizes</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormState</span> <span class="o">=</span> <span class="k">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitter</span><span class="o">.</span><span class="n">setSizes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">splitterNormStateSize</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setHtmlProgress</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setHtmlDone</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_setHtmlProgress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="k">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set progress bar and status label.</span>
+<span class="sd">        if progress is -1: use an indefinite progress bar.</span>
+<span class="sd">        if progress is 0: reset the progress bar to 0.</span>
+<span class="sd">        if progress is any value between 0 and 100: display progress bar</span>
+<span class="sd">          with that percentage of completion.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">color</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">setTextVisible</span><span class="p">(</span><span class="k">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignCenter</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">setFormat</span><span class="p">((</span><span class="s">&#39;Error&#39;</span> <span class="k">if</span> <span class="n">color</span> <span class="o">==</span> <span class="s">&#39;red&#39;</span> <span class="k">else</span> <span class="s">&#39;Warning&#39;</span><span class="p">)</span>
+                                             <span class="o">+</span> <span class="s">&#39;(s) detected&#39;</span><span class="p">)</span>
+            <span class="n">style</span> <span class="o">=</span> <span class="s">&#39;QProgressBar::chunk {</span><span class="se">\n</span><span class="s">background-color: &#39;</span><span class="o">+</span><span class="n">color</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">}&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">setTextVisible</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+            <span class="n">style</span> <span class="o">=</span> <span class="s">&#39;QProgressBar::chunk {}&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="n">style</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">progress</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">progress</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">progress</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">progress</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">progress</span> <span class="o">&lt;=</span> <span class="mi">100</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">setRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">prgStatus</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">progress</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the preview dock contents.</span>
+<span class="sd">        Might be necesssary for stop executing JS and loading data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setHtml</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="k">None</span><span class="p">,</span> <span class="n">QUrl</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_isJavaScriptEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if JS is enabled in the settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;JavaScriptEnabled&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_onJavaScriptEnabledCheckbox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checkbox clicked, save and apply settings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;JavaScriptEnabled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">enabled</span><span class="p">;</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_applyJavaScriptEnabled</span><span class="p">(</span><span class="n">enabled</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_applyJavaScriptEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update QWebView settings and QCheckBox state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">cbEnableJavascript</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">enabled</span><span class="p">)</span>
+
+        <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">settings</span><span class="p">()</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">JavascriptEnabled</span><span class="p">,</span> <span class="n">enabled</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">onPreviewSave</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save contents of the preview&quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;Save Preview as HTML&#39;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s">&#39;HTML (*.html)&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget</span><span class="o">.</span><span class="n">webView</span><span class="o">.</span><span class="n">page</span><span class="p">()</span><span class="o">.</span><span class="n">mainFrame</span><span class="p">()</span><span class="o">.</span><span class="n">toHtml</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Andrei: Shouldn&#8217;t this be wb, since utf8 can produce binary data
+where n is different than rn?</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">openedFile</span><span class="p">:</span>
+                    <span class="n">openedFile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="n">QMessageBox</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;Failed to save HTML&quot;</span><span class="p">,</span> <span class="n">unicode</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">),</span> <span class="s">&#39;utf8&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">Project Name version 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Author.
+      Last updated on Dec, 12, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

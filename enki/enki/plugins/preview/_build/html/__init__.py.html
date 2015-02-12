@@ -1,0 +1,912 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>__init__.py - The HTML, Markdown, and reST preview package &mdash; Project Name version 0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/CodeChat.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'version 0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Project Name version 0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">Project Name version 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body">
+            
+  <div class="section" id="init-py-the-html-markdown-and-rest-preview-package">
+<h1>__init__.py - The HTML, Markdown, and reST preview package<a class="headerlink" href="#init-py-the-html-markdown-and-rest-preview-package" title="Permalink to this headline">¶</a></h1>
+<p>The Preview plugin provides an HTML-based rendering of the
+file currently being edited. This file implements the
+Plugin interface; other modules are given below.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">PyQt4.QtCore</span> <span class="k">import</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">pyqtSlot</span>
+<span class="kn">from</span> <span class="nn">PyQt4.QtGui</span> <span class="k">import</span> <span class="n">QAction</span><span class="p">,</span> <span class="n">QIcon</span><span class="p">,</span> <span class="n">QKeySequence</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">,</span> <span class="n">QFileDialog</span><span class="p">,</span> <span class="n">QPalette</span>
+<span class="kn">from</span> <span class="nn">PyQt4</span> <span class="k">import</span> <span class="n">uic</span>
+
+<span class="kn">from</span> <span class="nn">enki.core.core</span> <span class="k">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">enki.core.uisettings</span> <span class="k">import</span> <span class="n">CheckableOption</span><span class="p">,</span> <span class="n">TextOption</span><span class="p">,</span> <span class="n">ChoiseOption</span>
+<span class="kn">from</span> <span class="nn">enki.lib.get_console_output</span> <span class="k">import</span> <span class="n">get_console_output</span>
+
+</pre></div>
+</div>
+<p>Import CodeChat if possible; otherwise, indicate it wasn&#8217;t available.</p>
+<div class="highlight-python3"><div class="highlight"><pre>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">CodeChat</span>
+    <span class="kn">import</span> <span class="nn">CodeChat.LanguageSpecificOptions</span> <span class="k">as</span> <span class="nn">LSO</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">CodeChat</span> <span class="o">=</span> <span class="k">None</span>
+
+<span class="k">def</span> <span class="nf">isHtmlFile</span><span class="p">(</span><span class="n">document</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">document</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="ow">and</span>  \
+           <span class="n">document</span><span class="o">.</span><span class="n">qutepart</span><span class="o">.</span><span class="n">language</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="ow">and</span> \
+           <span class="s">&#39;html&#39;</span> <span class="ow">in</span> <span class="n">document</span><span class="o">.</span><span class="n">qutepart</span><span class="o">.</span><span class="n">language</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>  <span class="ow">and</span> \
+           <span class="p">(</span><span class="ow">not</span> <span class="s">&#39;php&#39;</span> <span class="ow">in</span> <span class="n">document</span><span class="o">.</span><span class="n">qutepart</span><span class="o">.</span><span class="n">language</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>  <span class="c"># Django HTML template but not HTML (PHP)</span>
+
+<span class="k">def</span> <span class="nf">_getSphinxVersion</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Sphinx version as a list of integer items.</span>
+
+<span class="sd">    Raise OSError if not found, or</span>
+<span class="sd">          ValueError if failed to parse.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">get_console_output</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">stderr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;Sphinx&quot;</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Typical line we&#8217;re looking for, taking from running
+<tt class="docutils literal"><span class="pre">sphinx-build</span></tt> on the command line: <tt class="docutils literal"><span class="pre">Sphinx</span> <span class="pre">v1.2.3</span></tt>.
+Therefore, <tt class="docutils literal"><span class="pre">line.split()[1][1:]</span> <span class="pre">==</span> <span class="pre">'1.2.3'</span></tt>.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Split on periods and convert to an int, returning the version as a
+tuple.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span>
+
+<span class="k">class</span> <span class="nc">SettingsWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Insert the preview plugin as a page of the UISettings dialog.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Initialize the dialog, loading in the literate programming settings GUI.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">QWidget</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">uic</span><span class="o">.</span><span class="n">loadUi</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="s">&#39;Settings.ui&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Make links gray when they are disabled</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">palette</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette</span><span class="p">()</span>
+        <span class="n">palette</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Disabled</span><span class="p">,</span>
+                         <span class="n">QPalette</span><span class="o">.</span><span class="n">Link</span><span class="p">,</span>
+                         <span class="n">palette</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Disabled</span><span class="p">,</span> <span class="n">QPalette</span><span class="o">.</span><span class="n">Text</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxReference</span><span class="o">.</span><span class="n">setPalette</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span>
+
+        <span class="n">palette</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette</span><span class="p">()</span>
+        <span class="n">palette</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Active</span><span class="p">,</span>
+                         <span class="n">QPalette</span><span class="o">.</span><span class="n">WindowText</span><span class="p">,</span>
+                         <span class="n">palette</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Normal</span><span class="p">,</span> <span class="n">QPalette</span><span class="o">.</span><span class="n">Link</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxEnableAdvMode</span><span class="o">.</span><span class="n">setPalette</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">labelCodeChatIntro</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">CodeChat</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If the CodeChat module can&#8217;t be loaded, then disable the
+associated checkbox and show the &#8220;not installed&#8221; message.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbCodeChat</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labelCodeChatNotInstalled</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labelCodeChatNotInstalled</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="k">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Hide the &#8220;not installed&#8221; message.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labelCodeChatNotInstalled</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Clicking on advanced mode label triggers either advanced mode or
+normal mode.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxEnableAdvMode</span><span class="o">.</span><span class="n">mousePressEvent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_ToggleSphinxSettingModeClicked</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Update misc pieces of the GUI that can&#8217;t be stored in the .ui file.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updateSphinxSettingMode</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_updateleValidateSphinxExecutable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Check if Sphinx is installed. Sphinx version is not important</span>
+
+<span class="sd">        Update leValidateSphinxExecutable based on Sphinx status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxExecutable</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_getSphinxVersion</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leValidateSphinxExecutable</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s">&#39;Failed to execute {}: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ex</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leValidateSphinxExecutable</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s">&#39;Failed to parse {} version. Does sphinx work?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leValidateSphinxExecutable</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s">&#39;Sphinx is found!&#39;</span><span class="p">)</span>
+
+    <span class="nd">@pyqtSlot</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">on_pbSphinxProjectPath_clicked</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provide a directory chooser for the user to select a project path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">(),</span>
+            <span class="s">&#39;Project path&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxProjectPath</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxProjectPath</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>Automatically set the builder output path to &#8216;_build\html&#8217; under
+builder root path.</p>
+<p>Since relative paths are supported, we will only set
+leSphinxOutputPath if the path was none or was absolute (and
+therefore presumabely wrong). If it&#8217;s a relative path such as
+<tt class="docutils literal"><span class="pre">_build\html</span></tt>, then it&#8217;s probably OK without changing.</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxOutputPath</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+                <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leSphinxOutputPath</span><span class="o">.</span><span class="n">text</span><span class="p">())):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxOutputPath</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;_build&#39;</span><span class="p">,</span> <span class="s">&#39;html&#39;</span><span class="p">))</span>
+
+    <span class="nd">@pyqtSlot</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">on_pbSphinxOutputPath_clicked</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Proivde a directory chooser for the user to select an output path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">(),</span> <span class="s">&#39;Output path&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxOutputPath</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>The Sphinx executable can be selected by the user. A filter is needed
+such that non-executable files will not be selected by the user.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="nd">@pyqtSlot</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">on_pbSphinxExecutable_clicked</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fltr</span> <span class="o">=</span> <span class="s">&quot;sphinx-build&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="s">&quot;.exe&quot;</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;win&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s">&quot;&quot;</span><span class="p">)</span> \
+               <span class="o">+</span> <span class="s">&quot;;; All files (*)&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                           <span class="s">&quot;Select Sphinx executable&quot;</span><span class="p">,</span>
+                                           <span class="nb">filter</span><span class="o">=</span><span class="n">fltr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxExecutable</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_updateleValidateSphinxExecutable</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">on_ToggleSphinxSettingModeClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;AdvancedMode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;AdvancedMode&#39;</span><span class="p">]</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updateSphinxSettingMode</span><span class="p">()</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>The project path and Sphinx executable directory must be absolute;
+the output path may be relative to the project path or absolute.
+Use abspath or normpath as appropriate to guarantee this is true.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+    <span class="k">def</span> <span class="nf">on_leSphinxProjectPath_editingFinished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxProjectPath</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leSphinxProjectPath</span><span class="o">.</span><span class="n">text</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">on_leSphinxOutputPath_editingFinished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxOutputPath</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leSphinxOutputPath</span><span class="o">.</span><span class="n">text</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">on_leSphinxExecutable_editingFinished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updateleValidateSphinxExecutable</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_updateSphinxSettingMode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the Sphinx settings mode by hiding/revealing the appropriate</span>
+<span class="sd">        controls.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;AdvancedMode&#39;</span><span class="p">]:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Switch to advanced setting mode:
+hide all path setting line edit boxes and buttons.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gridLtNotAdvancedSettings</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gridLtNotAdvancedSettings</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">gridLtNotAdvancedSettings</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Enable advanced setting mode items</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxEnableAdvMode</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s">&#39;&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&#39;</span> <span class="o">+</span>
+            <span class="s">&#39;&lt;span style=&quot;text-decoration: underline;&quot;&gt;Switch to Normal Mode&#39;</span> <span class="o">+</span>
+            <span class="s">&#39;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxCmdline</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxCmdline</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxReference</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Reenable all path setting line edit boxes and buttons</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gridLtNotAdvancedSettings</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gridLtNotAdvancedSettings</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">gridLtNotAdvancedSettings</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Hide all advanced mode entries.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxEnableAdvMode</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s">&#39;&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;&lt;span style=&quot;text-decoration: underline;&quot;&gt;Switch to Advanced Mode&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxCmdline</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">leSphinxCmdline</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lbSphinxReference</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="k">False</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Plugin</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plugin interface implementation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create and install the plugin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">QObject</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span> <span class="o">=</span> <span class="k">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saveAction</span> <span class="o">=</span> <span class="k">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dockInstalled</span> <span class="o">=</span> <span class="k">False</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">workspace</span><span class="p">()</span><span class="o">.</span><span class="n">currentDocumentChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onDocumentChanged</span><span class="p">)</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">workspace</span><span class="p">()</span><span class="o">.</span><span class="n">languageChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onDocumentChanged</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Install our CodeChat page into the settings dialog.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">core</span><span class="o">.</span><span class="n">uiSettingsManager</span><span class="p">()</span><span class="o">.</span><span class="n">aboutToExecute</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onSettingsDialogAboutToExecute</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Update preview dock when the settings dialog (which contains the CodeChat
+enable checkbox) is changed.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">core</span><span class="o">.</span><span class="n">uiSettingsManager</span><span class="p">()</span><span class="o">.</span><span class="n">dialogAccepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onDocumentChanged</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>If user&#8217;s config .json file lacks it, populate CodeChat&#8217;s default
+config key and Sphinx&#8217;s default config key.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;CodeChat&#39;</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">():</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;CodeChat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;CodeChat&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">False</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;Sphinx&#39;</span> <span class="ow">in</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">():</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">False</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;Executable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;sphinx-build&#39;</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;ProjectPath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;&#39;</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;BuildOnSave&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">False</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;OutputPath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;_build&#39;</span><span class="p">,</span> <span class="s">&#39;html&#39;</span><span class="p">)</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;AdvancedMode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">False</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;Cmdline&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;sphinx-build -d &#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;_build&#39;</span><span class="p">,</span><span class="s">&#39;doctrees&#39;</span><span class="p">)</span>  \
+                                                 <span class="o">+</span> <span class="s">&#39; . &#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;_build&#39;</span><span class="p">,</span><span class="s">&#39;html&#39;</span><span class="p">)</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">del_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Uninstall the plugin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dockInstalled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_removeDock</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="o">.</span><span class="n">del_</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_onDocumentChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Document or Language changed.</span>
+<span class="sd">        Create dock, if necessary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canPreview</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">workspace</span><span class="p">()</span><span class="o">.</span><span class="n">currentDocument</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dockInstalled</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_createDock</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dockInstalled</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_removeDock</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_canPreview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">document</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if the given document can be shown in the Preview dock.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">document</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">False</span>
+
+        <span class="k">if</span> <span class="n">document</span><span class="o">.</span><span class="n">qutepart</span><span class="o">.</span><span class="n">language</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;Markdown&#39;</span><span class="p">,</span> <span class="s">&#39;Restructured Text&#39;</span><span class="p">)</span> <span class="ow">or</span> \
+           <span class="n">isHtmlFile</span><span class="p">(</span><span class="n">document</span><span class="p">):</span>
+            <span class="k">return</span> <span class="k">True</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>CodeChat can preview a file if it&#8217;s enabled and if that file&#8217;s
+extension is supported. Since enki needs to check file extension,
+file path cannot be none.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span> <span class="n">CodeChat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span> <span class="ow">and</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;CodeChat&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span>
+             <span class="ow">and</span> <span class="n">document</span><span class="o">.</span><span class="n">filePath</span><span class="p">()):</span>
+            <span class="n">lso</span> <span class="o">=</span> <span class="n">LSO</span><span class="o">.</span><span class="n">LanguageSpecificOptions</span><span class="p">()</span>
+            <span class="n">fileExtension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">document</span><span class="o">.</span><span class="n">filePath</span><span class="p">())[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">fileExtension</span> <span class="ow">in</span> <span class="n">lso</span><span class="o">.</span><span class="n">extension_to_options</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">return</span> <span class="k">True</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>TODO: When to really show the preview dock with Sphinx? That is, how
+can we tell if Sphinx will produce a .html file based on the currently
+open file in the editor? Just checking for a .html file doesn&#8217;t work;
+perhaps Sphinx hasn&#8217;t been run or the output files were removed, but
+a run of Sphinx will generate them. Or perhaps Sphinx won&#8217;t process
+this file (it&#8217;s excluded, wrong extension, etc.)</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Sphinx&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">document</span><span class="o">.</span><span class="n">filePath</span><span class="p">():</span>
+            <span class="k">return</span> <span class="k">True</span>
+
+        <span class="k">return</span> <span class="k">False</span>
+
+    <span class="k">def</span> <span class="nf">_createDock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Install dock</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>create dock</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">enki.plugins.preview.preview</span> <span class="k">import</span> <span class="n">PreviewDock</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span> <span class="o">=</span> <span class="n">PreviewDock</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="o">.</span><span class="n">closed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onDockClosed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="o">.</span><span class="n">shown</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onDockShown</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_saveAction</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="n">QIcon</span><span class="p">(</span><span class="s">&#39;:enkiicons/save.png&#39;</span><span class="p">),</span> <span class="s">&#39;Save Preview as HTML&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_saveAction</span><span class="o">.</span><span class="n">setShortcut</span><span class="p">(</span><span class="n">QKeySequence</span><span class="p">(</span><span class="s">&quot;Alt+Shift+P&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_saveAction</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="o">.</span><span class="n">onPreviewSave</span><span class="p">)</span>
+
+        <span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">()</span><span class="o">.</span><span class="n">addDockWidget</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">RightDockWidgetArea</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="p">)</span>
+
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;mView/aPreview&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="o">.</span><span class="n">showAction</span><span class="p">())</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;mFile/aSavePreview&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_saveAction</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dockInstalled</span> <span class="o">=</span> <span class="k">True</span>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_onDockClosed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dock has been closed by user. Change Enabled option</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]:</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">False</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_onDockShown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dock has been shown by user. Change Enabled option</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]:</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()[</span><span class="s">&#39;Preview&#39;</span><span class="p">][</span><span class="s">&#39;Enabled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">True</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">()</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_removeDock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove dock from GUI</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">removeAction</span><span class="p">(</span><span class="s">&quot;mView/aPreview&quot;</span><span class="p">)</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">actionManager</span><span class="p">()</span><span class="o">.</span><span class="n">removeAction</span><span class="p">(</span><span class="s">&quot;mFile/aSavePreview&quot;</span><span class="p">)</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">mainWindow</span><span class="p">()</span><span class="o">.</span><span class="n">removeDockWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dock</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dockInstalled</span> <span class="o">=</span> <span class="k">False</span>
+
+    <span class="k">def</span> <span class="nf">_onSettingsDialogAboutToExecute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialog</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The UI settings dialog is about to execute. Install CodeChat-related</span>
+<span class="sd">           settings.&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>First, append the CodeChat settings page to the settings dialog.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">SettingsWidget</span><span class="p">(</span><span class="n">dialog</span><span class="p">)</span>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">appendPage</span><span class="p">(</span><span class="s">u&quot;Literate programming&quot;</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Next, have the setting UI auto-update the corresponding CodeChat and
+config entries.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">appendOption</span><span class="p">(</span><span class="n">CheckableOption</span><span class="p">(</span><span class="n">dialog</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">(),</span>
+                                            <span class="s">&quot;CodeChat/Enabled&quot;</span><span class="p">,</span>
+                                            <span class="n">widget</span><span class="o">.</span><span class="n">cbCodeChat</span><span class="p">))</span>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">appendOption</span><span class="p">(</span><span class="n">CheckableOption</span><span class="p">(</span><span class="n">dialog</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">(),</span>
+                                            <span class="s">&quot;Sphinx/Enabled&quot;</span><span class="p">,</span>
+                                            <span class="n">widget</span><span class="o">.</span><span class="n">gbSphinxProject</span><span class="p">))</span>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">appendOption</span><span class="p">(</span><span class="n">ChoiseOption</span><span class="p">(</span><span class="n">dialog</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">(),</span> <span class="s">&quot;Sphinx/BuildOnSave&quot;</span><span class="p">,</span>
+                                         <span class="p">{</span><span class="n">widget</span><span class="o">.</span><span class="n">rbBuildOnlyOnSave</span><span class="p">:</span> <span class="k">True</span><span class="p">,</span>
+                                          <span class="n">widget</span><span class="o">.</span><span class="n">rbBuildOnFileChange</span><span class="p">:</span> <span class="k">False</span><span class="p">}))</span>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">appendOption</span><span class="p">(</span><span class="n">TextOption</span><span class="p">(</span><span class="n">dialog</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">(),</span>
+                                       <span class="s">&quot;Sphinx/ProjectPath&quot;</span><span class="p">,</span>
+                                       <span class="n">widget</span><span class="o">.</span><span class="n">leSphinxProjectPath</span><span class="p">))</span>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">appendOption</span><span class="p">(</span><span class="n">TextOption</span><span class="p">(</span><span class="n">dialog</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">(),</span>
+                                       <span class="s">&quot;Sphinx/OutputPath&quot;</span><span class="p">,</span>
+                                       <span class="n">widget</span><span class="o">.</span><span class="n">leSphinxOutputPath</span><span class="p">))</span>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">appendOption</span><span class="p">(</span><span class="n">TextOption</span><span class="p">(</span><span class="n">dialog</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">(),</span>
+                                       <span class="s">&quot;Sphinx/Executable&quot;</span><span class="p">,</span>
+                                       <span class="n">widget</span><span class="o">.</span><span class="n">leSphinxExecutable</span><span class="p">))</span>
+        <span class="n">dialog</span><span class="o">.</span><span class="n">appendOption</span><span class="p">(</span><span class="n">TextOption</span><span class="p">(</span><span class="n">dialog</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">config</span><span class="p">(),</span>
+                                       <span class="s">&quot;Sphinx/Cmdline&quot;</span><span class="p">,</span>
+                                       <span class="n">widget</span><span class="o">.</span><span class="n">leSphinxCmdline</span><span class="p">))</span>
+
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><blockquote>
+<div>Run this after the appendOption calls, since these fields must be set
+up before _updateleValidateSphinxExecutable can run.</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<div class="highlight-python3"><div class="highlight"><pre>
+        <span class="n">widget</span><span class="o">.</span><span class="n">_updateleValidateSphinxExecutable</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">Project Name version 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Author.
+      Last updated on Dec, 12, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

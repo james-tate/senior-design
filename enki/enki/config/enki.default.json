@@ -1,0 +1,76 @@
+{
+    "_version" : 15,
+    "PlatformDefaultsHaveBeenSet" : false,
+
+    "NegativeFileFilter": [ "*~", "*.o", "*.pyc", "*.bak", "__pycache__" ],
+
+    "Workspace": {
+        "FileSortMode": "URL"
+    },
+    "Qutepart": {
+        "Font": {
+            "Family": "Monospace",
+            "Size": 12
+        },
+        "Indentation": {
+            "UseTabs": false,
+            "Width": 4,
+            "AutoDetect": true
+        },
+        "EOL": {
+            "AutoDetect": true,
+            "Mode": "\\n"
+        },
+        "Edge": {
+            "Enabled": false,
+            "Column": 80,
+            "Color": "#ff0000"
+        },
+        "AutoCompletion": {
+            "Enabled": true,
+            "Threshold": 3
+        },
+        "Wrap": {
+            "Enabled": true,
+            "Mode": "WrapAtWord"
+        },
+        "WhiteSpaceVisibility": {
+            "Incorrect": true,
+            "Any": false
+        },
+        "StripTrailingWhitespace": false
+    },
+    "Modes": {
+        "Scheme": {
+            "Enabled": "whenOpened",
+            "InterpreterPath": "scheme"
+        },
+        "SML": {
+            "Enabled": "whenOpened",
+            "InterpreterPath": "sml"
+        }
+    },
+    "Preview": {
+        "Enabled": true,
+        "JavaScriptEnabled": true,
+        "Template": "Default"
+    },
+    "Navigator": {
+        "Enabled": true,
+        "CtagsPath": "ctags",
+        "SortAlphabetically": false
+    },
+    "OpenTerm": {
+        "Term": ""
+    },
+    "Lint": {
+        "Python": {
+            "Enabled": true,
+            "Show": "all",
+            "Path": "pylint"
+        }
+    },
+    "FileBrowser": {
+        "LastPath": ""
+    }
+}
