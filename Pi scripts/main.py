@@ -6,6 +6,7 @@
 #	Developer: James Tate
 #  -----------------------
 
+
 # This will be a main script that runs when the Raspberry Pi starts
 # This script will live in ~/flightcontrol
 # to run manual type
