@@ -29,8 +29,11 @@
 			
 			<!-- add new function for each date, then add new article with current class for where it will live. -->
 			<script>
-					function one() {
+				function one() {
 					document.getElementById("one").innerHTML = "Most major parts have been ordered, building  and programming has begun. </br></br><a href=\"pics/jan4.jpeg\"><img src=\"pics/jan4.jpeg\" style=\"width:200px; height:300px\"/></a> <a href=\"pics/jan3.jpeg\"><img src=\"pics/jan3.jpeg\" style=\"width:200px; height:300px\"/></a> <a href=\"pics/jan2.jpeg\"><img src=\"pics/jan2.jpeg\" style=\"width:200px; height:300px\"/></a> <a href=\"pics/jan1.jpeg\"><img src=\"pics/jan1.jpeg\" style=\"width:200px; height:300px\"/></a>";
+				}
+				function two() {
+					document.getElementById("two").innerHTML = "The major hardware has been assembled and is currently being tuned. ";
 				}
 			</script>
 			
@@ -38,6 +41,11 @@
         	<article class="current">
 				<h3 onclick="one()" onclick="two()">January 30, 2015</h3>
 				<p id="clear"><p id="one"></p></p>
+            </article>
+			
+			<article class="current">
+				<h3 onclick="two()" onclick="two()">Febuary 23, 2015</h3>
+				<p id="clear"><p id="two"></p></p>
             </article>
         
         
