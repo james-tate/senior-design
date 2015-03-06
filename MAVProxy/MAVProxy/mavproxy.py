@@ -918,7 +918,7 @@ if __name__ == '__main__':
         # some core functionality is in modules
         standard_modules = ['log', 'wp', 'rally','fence','param','relay',
                             'tuneopt','arm','mode','calibration','rc','auxopt','misc','cmdlong',
-                            'battery','terrain','output']
+                            'battery','output']
         for m in standard_modules:
             load_module(m, quiet=True)
 

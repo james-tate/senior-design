@@ -1,10 +1,10 @@
 #			Project Air Mail
-#		Mississippi State University
-#		ECE Senior Design Spring 2015
+# Mississippi State University
+# Senior Design Spring 2015
 
-#  -----------------------
-#	Developer: James Tate
-#  -----------------------
+# -----------------------
+# Developer: James Tate
+# -----------------------
 
 
 # This will be a main script that runs when the Raspberry Pi starts
@@ -78,4 +78,3 @@ while (n != 0):
 			print ("bye")
 		time.sleep(1)
 		n = n - 1
-
