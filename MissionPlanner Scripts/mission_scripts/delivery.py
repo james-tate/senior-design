@@ -34,6 +34,10 @@ time.sleep(1)
 
 f.close()
 time.sleep(3)
-os.remove('C:/mission_scripts/coords.txt')
+os.remove('C:/mission_scripts/coords.txt')\
+
+print 'Starting Mission'
+
+time.sleep(5)
 
 print 'Mission Finished'
