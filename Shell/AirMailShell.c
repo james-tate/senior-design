@@ -9,14 +9,18 @@
 /// http://www.raspberry-projects.com/pi/programming-in-c/pipes/named-pipes-fifos
 /// https://www.cs.bu.edu/teaching/c/file-io/intro/
 
+
 //
 #include <string.h>
 
-// For configuring the GPIO System
-#include <wiringPi.h>
+#if COMPILE_ON_PI
+    // For configuring the GPIO System
+    #include <wiringPi.h>
+
 
 // for the FIFO files
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -33,14 +37,20 @@
 #define ERROR_FILE "/tmp/AirMail_Error.txt"
 
 // Defining function calls
-void setupFIFOFiles(NULL);
-void closeFIFOFiles(NULL);
-int write_SHELL_TO_MAVPROXY(NULL);
-int read_MAVPROXY_TO_SHELL(NULL);
-void return_error(string x);
-void setupGPIO(NULL);
-int call_IPS(NULL);
+void setupGPIO();
+void setupFIFOFiles();
+void closeFIFOFiles();
 
+int write_SHELL_TO_MAVPROXY();
+int read_MAVPROXY_TO_SHELL();
+
+int return_error(char* x);
+
+int call_IPS();
+
+
+// Global defines
+int SHELL_TO_MAVPROXY_FILESTREAM = -1, MAVPROXY_TO_SHELL_FILESTREAM = -1;
 
 int main(){
     
@@ -48,7 +58,6 @@ int main(){
     setupGPIO();
     
     // FIFO Access/Control variables initialized to negative one
-    int SHELL_TO_MAVPROXY_FILESTREAM = -1, MAVPROXY_TO_SHELL_FILESTREAM = -1;
     
     /// constantly running loop
     while(1){
@@ -84,7 +93,7 @@ int main(){
     }
 }
 
-void setupFIFOFiles(NULL){
+void setupFIFOFiles(){
     
     // --------------------------------------
     // ----- CREATE A FIFO / NAMED PIPE -----
@@ -124,28 +133,29 @@ void setupFIFOFiles(NULL){
     //	O_NDELAY / O_NONBLOCK (same function) - Enables nonblocking mode. When set read requests on the file can return immediately with a failure status
     //											if there is no input immediately available (instead of blocking). Likewise, write requests can also return
     //											immediately with a failure status if the output can't be written immediately.
-    if (SHELL_TO_MAVPROXY != -1)
-        printf("Opened FIFO: %i\n", SHELL_TO_MAVPROXY);
-    if (MAVPROXY_TO_SHELL != -1)
-        printf("Opened FIFO: %i\n", MAVPROXY_TO_SHELL);
+    if (SHELL_TO_MAVPROXY_FILESTREAM != -1)
+        printf("Opened FIFO: %s\n", SHELL_TO_MAVPROXY);
+    if (MAVPROXY_TO_SHELL_FILESTREAM != -1)
+        printf("Opened FIFO: %s\n", MAVPROXY_TO_SHELL);
 }
 
-void closeFIFOFiles(NULL){
+void closeFIFOFiles(){
     // closes the SHELL_TO_MAVPROXY FIFO
     (void)close(SHELL_TO_MAVPROXY_FILESTREAM);
     // closes the MAVPROXY_TO_SHELL FIFO
     (void)close(MAVPROXY_TO_SHELL_FILESTREAM);
 }
 
-int write_SHELL_TO_MAVPROXY(NULL){
+int write_SHELL_TO_MAVPROXY(){
     // Setups up a file management data structure
     FILE *fp;
     // configures the File Pointer to write to the SHELL_TO_PROXY FIFO
-    fp = fopen(SHELL_TO_MAVPROXY,w);
+    fp = fopen(SHELL_TO_MAVPROXY,"w");
+    
     return 0;
 }
 
-int read_MAVPROXY_TO_SHELL(NULL){
+int read_MAVPROXY_TO_SHELL(){
     
     if(MAVPROXY_TO_SHELL_FILESTREAM != -1){
         unsigned char rx_buffer[256];
@@ -163,7 +173,7 @@ int read_MAVPROXY_TO_SHELL(NULL){
         else if (rx_length == 0){
             // No data waiting
 #if 0
-            // probably will return a empty value here
+            // probably will return a "empty" value here
 #endif
         }
         
@@ -177,18 +187,15 @@ int read_MAVPROXY_TO_SHELL(NULL){
         }
     }
     return 0;
-
-    
-    return 0;
 }
 
 /* error return function, flexible */
-int return_error(string x){
-    error(x);
+int return_error(char* x){
+    perror(x);
     exit(1);
 }
 
-void setupGPIO(NULL){
+void setupGPIO(){
     // configures the GPIO pins for the program
     wiringpiSetup()
     // sets pin defined for fromFlightController as a input pin
@@ -197,7 +204,7 @@ void setupGPIO(NULL){
     pinmode(ServoControl, output);
 }
 
-int call_IPS(NULL){
+int call_IPS(){
     #if 0
         //call Josh's .py script, return a successful execution
     
